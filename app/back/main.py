@@ -4,6 +4,7 @@ from flask import (
 )
 
 from flask_cors import CORS
+import os
 
 app = Flask(__name__, static_folder="../front/out", static_url_path="")
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -14,7 +15,4 @@ def index():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
-
-
-app = Flask(__name__)
+    app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
