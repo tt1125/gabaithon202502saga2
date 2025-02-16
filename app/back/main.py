@@ -10,10 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 app = Flask(__name__, static_folder="../front/out", static_url_path="")
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-    "DATABASE_URI",
-    f"postgresql://postgres:postgres@127.0.0.1:5432/postgres",
-)
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
