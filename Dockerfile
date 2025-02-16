@@ -12,4 +12,4 @@ COPY ./app/front/out /app/front/out
 
 RUN pip install --no-cache-dir -r /app/back/requirements.txt
 
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 app.back.main:app
+CMD if [ "$ENV" = "dev" ]; then python /app/back/main.py; else exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 app.back.main:app; fi
