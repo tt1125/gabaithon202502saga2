@@ -7,6 +7,7 @@ services:
       - "5000:5000"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgresql/postgres
+      ENV: ${ENV}
       TZ: Asia/Tokyo
     volumes:
       - ./app/back:/app/back
