@@ -31,7 +31,7 @@
    Password for user postgres:
 
    ```
-   gabaithon202502saga2
+   postgres
    ```
 
    接続完了、SQL 文を実行できる
