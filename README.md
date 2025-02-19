@@ -1,6 +1,6 @@
 ### PC から CloudSQL の PostgreSQL に接続する方法
 
-1. Google Cloud SDL をインストールする
+1. Google Cloud SDK をインストールする
    https://cloud.google.com/sdk?hl=ja
 1. ログインする
    ```
@@ -31,7 +31,7 @@
    Password for user postgres:
 
    ```
-   gabaithon202502saga2
+   postgres
    ```
 
    接続完了、SQL 文を実行できる

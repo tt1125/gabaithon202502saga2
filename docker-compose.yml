@@ -6,8 +6,8 @@ services:
     ports:
       - "5000:5000"
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgresql/postgres
       ENV: ${ENV}
+      DATABASE_URI: ${DATABASE_URI}
       TZ: Asia/Tokyo
     volumes:
       - ./app/back:/app/back
