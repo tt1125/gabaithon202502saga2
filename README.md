@@ -2,6 +2,9 @@
 
 1. Google Cloud SDK をインストールする
    https://cloud.google.com/sdk?hl=ja
+1. postgresql をインストールする
+   https://www.postgresql.jp/download
+
 1. ログインする
    ```
    gcloud auth application-default login
