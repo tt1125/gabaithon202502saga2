@@ -31,7 +31,7 @@ export function Tab() {
   ];
 
   return (
-    <nav className="w-full flex h-16">
+    <nav className="w-full flex h-16 fixed bottom-0 left-0">
       {tabs.map((tab, index) => (
         <button
           key={index}

@@ -1,3 +1,12 @@
+"use client";
+
+import { useGoogleMapContext } from "@/context/GoogleMapContext";
+import { useEffect } from "react";
+
 export default function Page() {
-  return <main className="h-[calc(100vh-64px)]"></main>;
+  const { setActive } = useGoogleMapContext();
+  useEffect(() => {
+    setActive(true);
+  }, []);
+  return <></>;
 }
