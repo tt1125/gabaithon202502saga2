@@ -15,7 +15,7 @@ const containerStyle = {
 };
 
 const center = {
-  lat: 35.6895, // 東京
+  lat: 35.6895,
   lng: 139.6917,
 };
 
@@ -59,7 +59,6 @@ export function GoogleMapProvider({ children }: { children: ReactNode }) {
       status: google.maps.DirectionsStatus
     ) => {
       if (status === "OK" && result) {
-        // Check if the new directions are different from the current ones
         if (
           !directions ||
           JSON.stringify(directions) !== JSON.stringify(result)
@@ -70,7 +69,7 @@ export function GoogleMapProvider({ children }: { children: ReactNode }) {
         console.error("Directions request failed", status);
       }
     },
-    [directions] // Add directions to the dependency array
+    [directions]
   );
 
   useEffect(() => {
@@ -88,6 +87,13 @@ export function GoogleMapProvider({ children }: { children: ReactNode }) {
             mapContainerStyle={containerStyle}
             center={center}
             zoom={18}
+            options={{
+              mapTypeControl: false,
+              zoomControl: false,
+              streetViewControl: false,
+              fullscreenControl: false,
+              cameraControl: false,
+            }}
           >
             <DirectionsService
               options={{
