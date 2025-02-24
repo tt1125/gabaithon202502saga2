@@ -45,9 +45,9 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
   const [active, setActive] = useState(false);
 
   // --- 固定の目的地たち (文字列 or 座標でOK) ---
-  const point1 = "聖マリア病院";
-  const point2 = "マクドナルド ２０９久留米店";
-  const point3 = "西鉄花畑駅";
+  const point1 = { lat: 33.303841951880464, lng: 130.50917614974222 };
+  const point2 = { lat: 33.30616086795037, lng: 130.5102654362774 };
+  const point3 = { lat: 33.30581594904022, lng: 130.5145199784839 };
 
   // --- Google Maps 読み込み ---
   const { isLoaded } = useJsApiLoader({
@@ -82,6 +82,8 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
   // route4: point3 → 現在地 (赤)
   const route4RendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
 
+  const userMarkerRef = useRef<google.maps.Marker | null>(null);
+
   // =====================
   // マップ生成時のコールバック
   // =====================
@@ -93,6 +95,87 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
       initialPositionRef.current = currentPointRef.current;
     }
 
+    // 現在地にユーザーのピンを追加
+    if (currentPointRef.current) {
+      // 初期位置からAまでの経路を計算
+      calculateRoute1(currentPointRef.current);
+    }
+
+    // route1の目的地にAのマークを追加
+    new google.maps.Marker({
+      position: point1,
+      map,
+      label: {
+        text: "A",
+        color: "white",
+        fontWeight: "bold",
+      },
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: "#4285F4", // 青
+        fillOpacity: 1,
+        strokeWeight: 0,
+        scale: 15, // サイズ調整
+      },
+    });
+
+    // route2の目的地にBのマークを追加
+    new google.maps.Marker({
+      position: point2,
+      map,
+      label: {
+        text: "B",
+        color: "white",
+        fontWeight: "bold",
+      },
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: "#34A853", // 緑
+        fillOpacity: 1,
+        strokeWeight: 0,
+        scale: 15, // サイズ調整
+      },
+    });
+
+    // ... existing code ...
+    new google.maps.Marker({
+      position: point3,
+      map,
+      label: {
+        text: "C",
+        color: "white",
+        fontWeight: "bold",
+      },
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        fillColor: "#FBBC05", // 黄
+        fillOpacity: 1,
+        strokeWeight: 0,
+        scale: 15, // サイズ調整
+      },
+    });
+
+    // route4の目的地にDのマークを追加
+    if (initialPositionRef.current) {
+      new google.maps.Marker({
+        position: initialPositionRef.current,
+        map,
+        label: {
+          text: "D",
+          color: "white",
+          fontWeight: "bold",
+        },
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: "#DB4437", // 赤
+          fillOpacity: 1,
+          strokeWeight: 0,
+          scale: 15, // サイズ調整
+        },
+      });
+    }
+    // ... existing code ...
+
     map.addListener("click", (event: google.maps.MapMouseEvent) => {
       if (event.latLng) {
         const newPos: Coordinates = {
@@ -102,8 +185,22 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
         currentPointRef.current = newPos;
         setMapCenter(newPos);
 
+        // クリックした位置の緯度と経度をコンソールに出力
+        console.log("Clicked position:", newPos);
+
         // 現在地→point1 ルートを更新
         calculateRoute1(newPos);
+
+        // ユーザーのピンを更新
+        if (userMarkerRef.current) {
+          userMarkerRef.current.setPosition(newPos);
+        } else if (mapRef.current) {
+          userMarkerRef.current = new google.maps.Marker({
+            position: newPos,
+            map: mapRef.current,
+            icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+          });
+        }
 
         // point3→初期位置 も更新するなら再計算
         if (route4RendererRef.current && initialPositionRef.current) {
@@ -128,8 +225,9 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
       polylineOptions: {
         strokeColor: "#DB4437", // 赤
         zIndex: 1, // 最も低い優先順位
+        strokeWeight: 5, // 太さを指定
       },
-      suppressMarkers: false,
+      suppressMarkers: true,
       preserveViewport: true,
     });
     route4RendererRef.current.setMap(map);
@@ -138,8 +236,9 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
       polylineOptions: {
         strokeColor: "#FBBC05", // 黄
         zIndex: 2,
+        strokeWeight: 5, // 太さを指定
       },
-      suppressMarkers: false,
+      suppressMarkers: true,
       preserveViewport: true,
     });
     route3RendererRef.current.setMap(map);
@@ -148,8 +247,9 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
       polylineOptions: {
         strokeColor: "#34A853", // 緑
         zIndex: 3,
+        strokeWeight: 5, // 太さを指定
       },
-      suppressMarkers: false,
+      suppressMarkers: true,
       preserveViewport: true,
     });
     route2RendererRef.current.setMap(map);
@@ -159,8 +259,9 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
       polylineOptions: {
         strokeColor: "#4285F4", // 青
         zIndex: 4, // 最も高い優先順位
+        strokeWeight: 5, // 太さを指定
       },
-      suppressMarkers: false,
+      suppressMarkers: true,
       preserveViewport: true,
     });
     route1RendererRef.current.setMap(map);
@@ -262,6 +363,17 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
 
         // 現在地→point1 ルートを更新
         calculateRoute1(newPos);
+
+        // ユーザーのピンを更新
+        if (userMarkerRef.current) {
+          userMarkerRef.current.setPosition(newPos);
+        } else if (mapRef.current) {
+          userMarkerRef.current = new google.maps.Marker({
+            position: newPos,
+            map: mapRef.current,
+            icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+          });
+        }
 
         // point3→初期位置 も更新するなら再計算
         if (route4RendererRef.current && initialPositionRef.current) {
