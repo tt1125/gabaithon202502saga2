@@ -4,11 +4,9 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   GoogleMap,
-  LoadScript,
   DirectionsRenderer,
   useJsApiLoader,
   DirectionsService,
-  LoadScriptNext,
 } from "@react-google-maps/api";
 
 const containerStyle = {
@@ -49,7 +47,7 @@ export function GoogleMapProvider({ children }: { children: ReactNode }) {
   const [active, setActive] = useState(false);
   const [directions, setDirections] =
     useState<google.maps.DirectionsResult | null>(null);
-  const { isLoaded, loadError } = useJsApiLoader({
+  const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: "AIzaSyCsWEFEzwVzLk6PTAWxhc-6WZzMzFKmamI",
     language: "ja",
   });
