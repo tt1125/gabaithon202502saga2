@@ -10,4 +10,5 @@ services:
       TZ: Asia/Tokyo
     volumes:
       - ./app/back:/app/back
+      - ./app/front/out:/app/front/out
     tty: true
