@@ -1,11 +1,14 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   GoogleMap,
   LoadScript,
   DirectionsRenderer,
+  useJsApiLoader,
+  DirectionsService,
+  LoadScriptNext,
 } from "@react-google-maps/api";
 
 const containerStyle = {
@@ -41,38 +44,40 @@ export function useGoogleMapContext() {
 }
 
 export function GoogleMapProvider({ children }: { children: ReactNode }) {
+  const [origin, setOrigin] = useState<string>("東京駅");
+  const [destination, setDestination] = useState<string>("渋谷駅");
   const [active, setActive] = useState(false);
   const [directions, setDirections] =
     useState<google.maps.DirectionsResult | null>(null);
-
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: "AIzaSyCsWEFEzwVzLk6PTAWxhc-6WZzMzFKmamI",
+    language: "ja",
+  });
   const pathname = usePathname();
+
+  const directionsCallback = useCallback(
+    (
+      result: google.maps.DirectionsResult | null,
+      status: google.maps.DirectionsStatus
+    ) => {
+      if (status === "OK" && result) {
+        // Check if the new directions are different from the current ones
+        if (
+          !directions ||
+          JSON.stringify(directions) !== JSON.stringify(result)
+        ) {
+          setDirections(result);
+        }
+      } else {
+        console.error("Directions request failed", status);
+      }
+    },
+    [directions] // Add directions to the dependency array
+  );
 
   useEffect(() => {
     if (active && pathname !== "/") setActive(false);
   }, [pathname]);
-
-  useEffect(() => {
-    const fetchDirections = async () => {
-      if (typeof google === "undefined" || !google.maps) return;
-
-      const directionsService = new google.maps.DirectionsService();
-      const origin: Coordinates = { lat: 35.6895, lng: 139.6917 };
-      const destination: Coordinates = { lat: 35.6586, lng: 139.7454 };
-
-      const result = await directionsService.route({
-        origin,
-        destination,
-        travelMode: google.maps.TravelMode.DRIVING,
-      });
-
-      try {
-        setDirections(result);
-      } catch (error) {
-        console.error("Failed to set directions", error);
-      }
-    };
-    fetchDirections();
-  }, []);
 
   const Map = useMemo(() => {
     const MapViewer = () => (
@@ -80,19 +85,42 @@ export function GoogleMapProvider({ children }: { children: ReactNode }) {
         className="h-[calc(100vh-64px)] fixed top-0 left-0 w-full"
         style={{ zIndex: -1 }}
       >
-        <LoadScript googleMapsApiKey="AIzaSyCsWEFEzwVzLk6PTAWxhc-6WZzMzFKmamI">
+        {origin && destination && isLoaded ? (
           <GoogleMap
             mapContainerStyle={containerStyle}
             center={center}
             zoom={18}
           >
-            {directions && <DirectionsRenderer directions={directions} />}
+            <DirectionsService
+              options={{
+                destination,
+                origin,
+                travelMode: google.maps.TravelMode.DRIVING,
+              }}
+              callback={directionsCallback}
+            />
+            {directions && (
+              <DirectionsRenderer
+                options={{
+                  directions,
+                }}
+              />
+            )}
           </GoogleMap>
-        </LoadScript>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <p>Loading...</p>
+          </div>
+        )}
       </main>
     );
+
     MapViewer.displayName = "MapViewer";
     return MapViewer;
+  }, [directions, isLoaded]);
+
+  useEffect(() => {
+    console.log("directions", directions);
   }, [directions]);
 
   return (
