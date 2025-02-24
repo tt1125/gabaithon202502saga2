@@ -3,7 +3,9 @@
 import { Tab } from "@/components/Tab";
 import { createContext, useContext, ReactNode } from "react";
 
-const LayoutContext = createContext<{}>({});
+type LayoutContextType = null;
+
+const LayoutContext = createContext<LayoutContextType>(null);
 
 export function useLayoutContext() {
   return useContext(LayoutContext);
@@ -11,7 +13,7 @@ export function useLayoutContext() {
 
 export function LayoutProvider({ children }: { children: ReactNode }) {
   return (
-    <LayoutContext.Provider value={{}}>
+    <LayoutContext.Provider value={null}>
       {children}
       <Tab />
     </LayoutContext.Provider>
