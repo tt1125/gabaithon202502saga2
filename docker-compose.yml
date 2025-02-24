@@ -7,7 +7,6 @@ services:
     environment:
       ENV: ${ENV}
       DATABASE_URI: ${DATABASE_URI}
-      NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
       TZ: Asia/Tokyo
     volumes:
       - ./app/back:/app/back

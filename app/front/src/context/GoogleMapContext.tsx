@@ -80,9 +80,7 @@ export function GoogleMapProvider({ children }: { children: ReactNode }) {
         className="h-[calc(100vh-64px)] fixed top-0 left-0 w-full"
         style={{ zIndex: -1 }}
       >
-        <LoadScript
-          googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}
-        >
+        <LoadScript googleMapsApiKey="AIzaSyCsWEFEzwVzLk6PTAWxhc-6WZzMzFKmamI">
           <GoogleMap
             mapContainerStyle={containerStyle}
             center={center}
