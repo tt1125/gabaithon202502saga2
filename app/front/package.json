@@ -13,6 +13,7 @@
     "format": "yarn format:prettier && yarn format:eslint"
   },
   "dependencies": {
+    "@react-google-maps/api": "^2.20.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.475.0",
