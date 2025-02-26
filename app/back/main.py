@@ -7,6 +7,8 @@ import os
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import Mapped, mapped_column
 
+from lib.hello_world import hello_world
+
 app = Flask(__name__, static_folder="../front/out", static_url_path="")
 CORS(app, resources={r"/*": {"origins": "*"}})
 
@@ -32,6 +34,11 @@ def index():
 def test():
     record = Test.query.get(1)
     return {"id": record.id, "message": record.message}, 200
+
+
+@app.route("/hello_world")
+def hello_world_test():
+    return hello_world()
 
 
 if __name__ == "__main__":
