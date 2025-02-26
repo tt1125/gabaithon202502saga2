@@ -11,8 +11,8 @@ export default function Login() {
       <div className="w-full max-w-md px-4">
         <div className="w-full rounded-xl overflow-hidden shadow-2xl">
           {/* カードヘッダー - グラデーション部分 */}
-          <div className="bold text-white h-16 bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center">
-            WALK
+          <div className="text-white h-16 bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center">
+            <h1 className="text-2xl font-bold">WALK</h1>
           </div>
 
           {/* カード本体 */}
