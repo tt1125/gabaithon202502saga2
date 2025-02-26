@@ -51,16 +51,18 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
 
   // --- Google Maps 読み込み ---
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: "AIzaSyCsWEFEzwVzLk6PTAWxhc-6WZzMzFKmamI", // ← 自前のAPIキーに置き換えてください
+    googleMapsApiKey: "AIzaSyCsWEFEzwVzLk6PTAWxhc-6WZzMzFKmamI",
     language: "ja",
   });
 
   // --- ページ遷移でactiveをリセット (ご要望があれば) ---
   useEffect(() => {
-    if (active && pathname !== "/") {
+    if (pathname == "/") {
+      setActive(true);
+    } else {
       setActive(false);
     }
-  }, [pathname, active]);
+  }, [pathname]);
 
   // =====================
   // 位置情報を ref で保持
@@ -410,7 +412,14 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
   return (
     <GoogleMapContext.Provider value={{ active, setActive }}>
       {isLoaded && mapCenter ? (
-        <div style={{ width: "100%", height: "100vh", position: "relative" }}>
+        <div
+          style={{
+            width: "100%",
+            height: "100vh",
+            position: "absolute",
+            zIndex: -1,
+          }}
+        >
           <GoogleMap
             onLoad={handleMapLoad}
             mapContainerStyle={containerStyle}
@@ -427,7 +436,13 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
       ) : (
         <div>Loading...</div>
       )}
-      {children}
+      <div
+        style={{
+          zIndex: active ? -2 : "auto",
+        }}
+      >
+        {children}
+      </div>
     </GoogleMapContext.Provider>
   );
 }
