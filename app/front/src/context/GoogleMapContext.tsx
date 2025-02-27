@@ -16,10 +16,12 @@ import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
 type GoogleMapContextType = {
   active: boolean;
   setActive: (active: boolean) => void;
+  isLoaded: boolean;
 };
 const GoogleMapContext = createContext<GoogleMapContextType>({
   active: false,
   setActive: () => {},
+  isLoaded: false,
 });
 
 export function useGoogleMapContext() {
@@ -49,20 +51,17 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
   const point2 = { lat: 33.373578, lng: 130.208156 };
   const point3 = { lat: 33.371796, lng: 130.20775 };
 
-  // --- Google Maps 読み込み ---
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: "AIzaSyCsWEFEzwVzLk6PTAWxhc-6WZzMzFKmamI",
-    language: "ja",
-  });
+  let isLoaded = false;
 
-  // --- ページ遷移でactiveをリセット (ご要望があれば) ---
   useEffect(() => {
-    if (pathname == "/") {
-      setActive(true);
-    } else {
-      setActive(false);
+    if (active) {
+      console.log("GoogleMapProvider: active");
+      const { isLoaded } = useJsApiLoader({
+        googleMapsApiKey: "AIzaSyCsWEFEzwVzLk6PTAWxhc-6WZzMzFKmamI",
+        language: "ja",
+      });
     }
-  }, [pathname]);
+  }, [active]);
 
   // =====================
   // 位置情報を ref で保持
@@ -230,7 +229,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
               if (status === "OK") {
                 route4RendererRef.current?.setDirections(result);
               }
-            },
+            }
           );
         }
       }
@@ -301,7 +300,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
           if (status === "OK" && route4RendererRef.current) {
             route4RendererRef.current.setDirections(result);
           }
-        },
+        }
       );
     }
 
@@ -316,7 +315,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
         if (status === "OK" && route3RendererRef.current) {
           route3RendererRef.current.setDirections(result);
         }
-      },
+      }
     );
 
     // ②-1) point1 → point2
@@ -330,7 +329,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
         if (status === "OK" && route2RendererRef.current) {
           route2RendererRef.current.setDirections(result);
         }
-      },
+      }
     );
   }
 
@@ -355,7 +354,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
           const distanceToPoint1 =
             google.maps.geometry.spherical.computeDistanceBetween(
               new google.maps.LatLng(currentPos.lat, currentPos.lng),
-              new google.maps.LatLng(point1.lat, point1.lng),
+              new google.maps.LatLng(point1.lat, point1.lng)
             );
 
           if (distanceToPoint1 < 50) {
@@ -369,7 +368,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
-      },
+      }
     );
   }
 
@@ -390,7 +389,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
           const distanceToPoint2 =
             google.maps.geometry.spherical.computeDistanceBetween(
               new google.maps.LatLng(currentPos.lat, currentPos.lng),
-              new google.maps.LatLng(point2.lat, point2.lng),
+              new google.maps.LatLng(point2.lat, point2.lng)
             );
 
           if (distanceToPoint2 < 50) {
@@ -403,7 +402,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
-      },
+      }
     );
   }
 
@@ -424,7 +423,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
           const distanceToPoint3 =
             google.maps.geometry.spherical.computeDistanceBetween(
               new google.maps.LatLng(currentPos.lat, currentPos.lng),
-              new google.maps.LatLng(point3.lat, point3.lng),
+              new google.maps.LatLng(point3.lat, point3.lng)
             );
 
           if (distanceToPoint3 < 50) {
@@ -438,7 +437,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
-      },
+      }
     );
   }
 
@@ -468,8 +467,8 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
               new google.maps.LatLng(currentPos.lat, currentPos.lng),
               new google.maps.LatLng(
                 initialPositionRef.current.lat,
-                initialPositionRef.current.lng,
-              ),
+                initialPositionRef.current.lng
+              )
             );
 
           if (distanceToInitialPosition < 50) {
@@ -477,7 +476,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
             route4RendererRef.current?.setMap(null); // 初期位置へのルートを削除
           }
         }
-      },
+      }
     );
   }
 
@@ -544,14 +543,14 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
               if (status === "OK") {
                 route4RendererRef.current?.setDirections(result);
               }
-            },
+            }
           );
         }
       },
       (err) => {
         console.error("Geolocation watchPosition error:", err);
       },
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 5000 },
+      { enableHighAccuracy: true, maximumAge: 2000, timeout: 5000 }
     );
 
     return () => {
@@ -568,8 +567,8 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
   // 描画 (一度だけ)
   // =====================
   return (
-    <GoogleMapContext.Provider value={{ active, setActive }}>
-      {isLoaded && mapCenter ? (
+    <GoogleMapContext.Provider value={{ active, setActive, isLoaded }}>
+      {isLoaded && mapCenter && (
         <div
           style={{
             width: "100%",
@@ -591,8 +590,6 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
             }}
           />
         </div>
-      ) : (
-        <div>Loading...</div>
       )}
       <div
         style={{

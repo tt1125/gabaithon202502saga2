@@ -12,6 +12,19 @@ type Point = {
 };
 
 type SuggestedRoutes = {
-  easy: Route;
-  hard: Route;
+  easy: {
+    point1: Point;
+    point2: Point;
+    point3: Point;
+  };
+  normal: {
+    point1: Point;
+    point2: Point;
+    point3: Point;
+  };
+  hard: {
+    point1: Point;
+    point2: Point;
+    point3: Point;
+  };
 };
