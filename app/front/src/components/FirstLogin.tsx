@@ -14,6 +14,7 @@ import {
   Button,
   Box,
 } from "@mui/material";
+import { END_POINT } from "@/const/endpoint";
 
 type FirstLoginProps = {
   open: boolean;
@@ -39,29 +40,19 @@ export default function FirstLogin({ open, onClose }: FirstLoginProps) {
         age: age,
       };
 
-      // const response = await fetch("/user", {
-      // method: "POST",
-      // headers: { "Content-Type": "application/json" },
-      // body: JSON.stringify(userInfo),
-      // });
-
-      const response = await fetch("http://localhost:5000/user", {
+      const response = await fetch(`${END_POINT}/user`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userInfo),
       });
 
       const data = await response.json();
-      console.log("data", data);
     } catch (error) {
       console.log(error);
     }
   };
 
   const handleSubmit = () => {
-    // ここで年齢と性別の情報を処理します
-    console.log("Age:", age);
-    console.log("Gender:", gender);
     addUserProfile(age, gender);
     onClose();
   };
@@ -126,6 +117,8 @@ export default function FirstLogin({ open, onClose }: FirstLoginProps) {
           </Select>
 
           <Button
+            disabled={!age || gender === ""}
+            className="w-full"
             variant="contained"
             onClick={handleSubmit}
             sx={{
@@ -133,6 +126,10 @@ export default function FirstLogin({ open, onClose }: FirstLoginProps) {
               color: "white",
               "&:hover": {
                 background: "linear-gradient(to right, #7e22ce, #4338ca)",
+              },
+              "&.Mui-disabled": {
+                background: "gray",
+                color: "white",
               },
             }}
           >

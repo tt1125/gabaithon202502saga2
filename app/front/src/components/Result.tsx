@@ -5,14 +5,13 @@ import { useRouter } from "next/navigation";
 import { Footprints, MapPin, Trophy, Check, Flame, Heart } from "lucide-react";
 import { TextField, Button, Paper } from "@mui/material";
 
-export default function CompletionPage() {
+export default function Result() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [comment, setComment] = useState("");
 
   const handleSubmit = () => {
     // ここに投稿処理を実装
-    console.log({ title, comment });
     // 投稿後にタイトル画面に戻る
     router.push("/");
   };

@@ -87,7 +87,7 @@ export default function Page() {
         {/* メインコンテンツ */}
         <Box
           sx={{
-            p: 4,
+            py: 2,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -97,11 +97,12 @@ export default function Page() {
           {/* ユーザー情報 */}
           <Box
             sx={{
+              maxWidth: "600px",
               width: "100%",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              mb: 4,
+              mb: 2,
             }}
           >
             <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -135,7 +136,8 @@ export default function Page() {
             placeholder="検索"
             fullWidth
             sx={{
-              maxWidth: "90%",
+              maxWidth: "600px",
+              width: "100%",
               mb: 4,
               "& .MuiOutlinedInput-root": {
                 borderRadius: "9999px",

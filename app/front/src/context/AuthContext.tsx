@@ -52,7 +52,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async () => {
     const result = await signInWithPopup(auth, provider);
     setUser(result.user);
-    console.log("userData", result.user);
   };
 
   const logout = async () => {

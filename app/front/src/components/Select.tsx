@@ -401,6 +401,7 @@ export default function MultiRoutesMap({
 
   const handleStart = async () => {
     const { point1, point2, point3 } = suggestedRoutes[selectedEase];
+    console.log("Selected Route:", point1, point2, point3);
     const routeData = {
       origin: {
         lat: origin?.lat || 0,
@@ -411,8 +412,9 @@ export default function MultiRoutesMap({
       point2: { lat: point2.lat, lng: point2.lng, name: point2.name },
       point3: { lat: point3.lat, lng: point3.lng, name: point3.name },
     };
-    localStorage.setItem("selectedEase", "");
-    localStorage.setItem("selectedEase", JSON.stringify(routeData));
+    console.log("Route Data:", routeData);
+    localStorage.setItem("selectedRoute", "");
+    localStorage.setItem("selectedRoute", JSON.stringify(routeData));
     storedProgress(3);
   };
 

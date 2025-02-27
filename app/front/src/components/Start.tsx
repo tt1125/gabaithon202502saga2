@@ -13,6 +13,7 @@ type StartProps = {
   setProgress: (started: number) => void;
   isNewUser: boolean;
   handleClosePopup: () => void;
+  getSuggestedRoute: () => void;
 };
 
 export default function Start({
@@ -20,6 +21,7 @@ export default function Start({
   setProgress,
   isNewUser,
   handleClosePopup,
+  getSuggestedRoute,
 }: StartProps) {
   const router = useRouter();
 
@@ -80,13 +82,11 @@ export default function Start({
               <Button
                 onClick={() => {
                   setProgress(1);
+                  getSuggestedRoute();
                 }}
                 className="w-full h-14 text-lg font-medium bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 rounded-full shadow-lg"
               >
                 スタート
-              </Button>
-              <Button onClick={() => router.push("/result")}>
-                完走後の画面　テスト用
               </Button>
             </div>
           </div>

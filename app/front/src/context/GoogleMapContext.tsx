@@ -17,11 +17,15 @@ type GoogleMapContextType = {
   active: boolean;
   setActive: (active: boolean) => void;
   isLoaded: boolean;
+  currentLat: number;
+  currentLng: number;
 };
 const GoogleMapContext = createContext<GoogleMapContextType>({
   active: false,
   setActive: () => {},
   isLoaded: false,
+  currentLat: 0,
+  currentLng: 0,
 });
 
 export function useGoogleMapContext() {
@@ -59,10 +63,6 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     selectedRoute = JSON.parse(localStorage.getItem("selectedRoute") || "[]");
   }, [active]);
-
-  useEffect(() => {
-    console.log(isLoaded, mapCenter);
-  }, [isLoaded, mapCenter]);
 
   // =====================
   // 位置情報を ref で保持
@@ -594,7 +594,15 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
   // 描画 (一度だけ)
   // =====================
   return (
-    <GoogleMapContext.Provider value={{ active, setActive, isLoaded }}>
+    <GoogleMapContext.Provider
+      value={{
+        active,
+        setActive,
+        isLoaded,
+        currentLat: currentPointRef.current?.lat || 0,
+        currentLng: currentPointRef.current?.lng || 0,
+      }}
+    >
       {isLoaded && mapCenter && active && (
         <div
           style={{
