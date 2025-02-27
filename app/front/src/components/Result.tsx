@@ -4,23 +4,65 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Footprints, MapPin, Trophy, Check, Flame, Heart } from "lucide-react";
 import { TextField, Button, Paper } from "@mui/material";
+import { END_POINT } from "@/const/endpoint";
+import { useAuthContext } from "@/context/AuthContext";
 
-export default function Result() {
+type ResultProps = {
+  setProgress: (progress: number) => void;
+};
+
+export default function Result({ setProgress }: ResultProps) {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [comment, setComment] = useState("");
 
-  const handleSubmit = () => {
-    // ここに投稿処理を実装
-    // 投稿後にタイトル画面に戻る
-    router.push("/");
+  const { user } = useAuthContext();
+
+  const handleSubmit = async () => {
+    const response = await fetch(`${END_POINT}/api/posts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: title,
+        comment: comment,
+        created_by: user?.uid, // ここに適切なユーザーIDを設定
+        origin_lat: originLat, // originの緯度を設定
+        origin_lng: originLng, // originの経度を設定
+        point1_lat: point1.lat,
+        point1_lng: point1.lng,
+        point1_name: point1.name,
+        point2_lat: point2.lat,
+        point2_lng: point2.lng,
+        point2_name: point2.name,
+        point3_lat: point3.lat,
+        point3_lng: point3.lng,
+        point3_name: point3.name,
+      }),
+    });
+
+    await response.json();
+    localStorage.setItem("selectedRoute", "");
+    localStorage.setItem("progress", "");
+    setProgress(0);
   };
 
   const handleReturnToTitle = () => {
-    router.push("/");
+    localStorage.setItem("selectedRoute", "");
+    localStorage.setItem("progress", "");
+    setProgress(0);
   };
 
-  const routes = ["Aルート", "Bルート", "Cルート", "Dルート"];
+  const routes = ["Aルート", "Bルート", "Cルート"];
+  const selectedRoutes = JSON.parse(
+    localStorage.getItem("selectedRoute") || "{}"
+  );
+  console.log(selectedRoutes);
+  const originLat = selectedRoutes.origin.lat;
+  const originLng = selectedRoutes.origin.lng;
+  const point1 = selectedRoutes.point1;
+  const point2 = selectedRoutes.point2;
+  const point3 = selectedRoutes.point3;
+  const routeNames = [point1.name, point2.name, point3.name];
 
   return (
     <main className="h-screen w-full overflow-hidden">
@@ -124,7 +166,7 @@ export default function Result() {
                     <Footprints className="h-6 w-6 text-purple-600" />
                   </div>
                   <div>
-                    <p className="font-medium">{route}</p>
+                    <p className="font-medium">{routeNames[index]}</p>
                   </div>
                 </li>
               ))}
