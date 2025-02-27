@@ -22,6 +22,9 @@ from sqlalchemy.sql import func
 
 from lib.hello_world import hello_world
 
+from flask import request, jsonify #よく分からんけど，ちょっと追加してみた．
+from sqlalchemy.exc import IntegrityError
+
 app = Flask(__name__, static_folder="../front/out", static_url_path="")
 CORS(app, resources={r"/*": {"origins": "*"}})
 
@@ -41,9 +44,36 @@ class Test(db.Model):
 
 class TestVector(db.Model):
     __tablename__ = "test_vector"
-    id: Mapped[str] = mapped_column(db.String, primary_key=True)
+    id: Mapped[int] = mapped_column(db.Integer, primary_key=True, autoincrement=True)
     content: Mapped[str] = mapped_column(db.String, nullable=False)
     embedding: Mapped[Vector] = mapped_column(Vector(10))
+
+class Posts(db.Model):
+    __tablename__ = "posts"
+    id: Mapped[int] = mapped_column(db.Integer, primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(db.String,nullable=True)
+    comment: Mapped[str] = mapped_column(db.String,nullable=True)
+    embedding: Mapped[Vector] = mapped_column(Vector(1536))
+    created_by: Mapped[str] = mapped_column(db.String,nullable=True)
+    created_at: Mapped[float] = mapped_column(db.Float,nullable=True)
+    origin_lat: Mapped[float] = mapped_column(db.Float,nullable=True)
+    origin_lng: Mapped[float] = mapped_column(db.Float,nullable=True)
+    origin_name: Mapped[str] = mapped_column(db.String,nullable=True)
+    point1_lat: Mapped[float] = mapped_column(db.Float,nullable=True)
+    point1_lng: Mapped[float] = mapped_column(db.Float,nullable=True)
+    point1_name: Mapped[str] = mapped_column(db.String,nullable=True)
+    point2_lat: Mapped[float] = mapped_column(db.Float,nullable=True)
+    point2_lng: Mapped[float] = mapped_column(db.Float,nullable=True)
+    point2_name: Mapped[str] = mapped_column(db.String,nullable=True)
+    point3_lat: Mapped[float] = mapped_column(db.Float,nullable=True)
+    point3_lng: Mapped[float] = mapped_column(db.Float,nullable=True)
+    point3_name: Mapped[str] = mapped_column(db.String,nullable=True)
+
+class Users(db.Model):
+    __tablename__ = "users"
+    id: Mapped[str] = mapped_column(db.String, primary_key=True)
+    name: Mapped[str] = mapped_column(db.String,nullable=True)
+    img_url: Mapped[str] = mapped_column(db.String,nullable=True)
 
 
 class Post(db.Model):
@@ -78,6 +108,42 @@ def index():
 def test():
     record = Test.query.get(1)
     return {"id": record.id, "message": record.message}, 200
+
+@app.route("/user",methods=['POST'])
+def insert_userJSON():
+
+    json = request.get_json()
+
+    if not json or 'id' not in json or 'img_url' not in json or 'name' not in json:
+        return jsonify({'error': 'Invalid!'}), 400
+    new_user = Users(img_url=json['img_url'],name=json['name'])
+
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({'message': 'Add success!'}), 201
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({'error': 'ID Conflict!'}),409
+    except Exception as eX:
+        db.session.rollback()
+        return jsonify({'error': str(eX)}), 500
+
+@app.route("/check_newcomer",methods=['POST'])
+def check_newcomer():
+    json = request.get_json()
+
+    if not json or 'id' not in json:
+        return jsonify({'error': 'Invalid!'}),400
+    
+    user = Users.query.filter_by(id=json['id'].first())
+
+    if user:
+        return jsonify({'is_new_user': True}),200
+    else:
+        return jsonify({'is_new_user': False}),200
+
+
 
 
 @app.route("/api/suggestion_routes", methods=["POST"])
