@@ -115,7 +115,7 @@ export default function CompletionPage() {
             />
           </Paper>
 
-          {/* 達成リスト */}
+          {/* ルート */}
           <Paper elevation={2} className="p-6 w-full rounded-2xl mb-8">
             <h3 className="text-lg font-bold mb-4 text-indigo-600">ルート</h3>
             <ul className="space-y-4">

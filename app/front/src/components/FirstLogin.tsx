@@ -22,21 +22,52 @@ type FirstLoginProps = {
 
 export default function FirstLogin({ open, onClose }: FirstLoginProps) {
   const loggedInUser = useContext(AuthContext);
-  const userName = loggedInUser.user?.displayName;
-  const userIconUrl = loggedInUser.user?.photoURL;
+  const user = loggedInUser.user;
+  const userName = user?.displayName;
+  const userIconUrl = user?.photoURL;
 
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
+
+  const addUserProfile = async (age: string, gender: string) => {
+    try {
+      const userInfo = {
+        id: user?.uid,
+        img_url: user?.photoURL,
+        name: user?.displayName,
+        gender: gender,
+        age: age,
+      };
+
+      // const response = await fetch("/user", {
+      // method: "POST",
+      // headers: { "Content-Type": "application/json" },
+      // body: JSON.stringify(userInfo),
+      // });
+
+      const response = await fetch("http://localhost:5000/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userInfo),
+      });
+
+      const data = await response.json();
+      console.log("data", data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const handleSubmit = () => {
     // ここで年齢と性別の情報を処理します
     console.log("Age:", age);
     console.log("Gender:", gender);
+    addUserProfile(age, gender);
     onClose();
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+    <Dialog open={!open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle
         sx={{
           textAlign: "center",

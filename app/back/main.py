@@ -97,6 +97,7 @@ def test():
 def insert_userJSON():
 
     json = request.get_json()
+    print("Received JSON:", json)  # デバッグ用
 
     if (
         not json
