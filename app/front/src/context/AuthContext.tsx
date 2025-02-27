@@ -23,7 +23,7 @@ type AuthContextType = {
   logout: () => void;
 };
 
-const AuthContext = createContext<AuthContextType>({
+export const AuthContext = createContext<AuthContextType>({
   user: null,
   login: () => {},
   logout: () => {},
@@ -52,6 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async () => {
     const result = await signInWithPopup(auth, provider);
     setUser(result.user);
+    console.log("userData", result.user);
   };
 
   const logout = async () => {
