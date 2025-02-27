@@ -42,15 +42,19 @@ const containerStyle = {
 };
 
 export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
   const [mapCenter, setMapCenter] = useState<Coordinates | null>(null);
   const [active, setActive] = useState(false);
 
   // --- 固定の目的地たち (文字列 or 座標でOK) ---
-  const point1 = { lat: 33.373914, lng: 130.206551 };
-  const point2 = { lat: 33.373578, lng: 130.208156 };
-  const point3 = { lat: 33.371796, lng: 130.20775 };
+  let selectedRoute = JSON.parse(localStorage.getItem("selectedRoute") || "[]");
 
+  useEffect(() => {
+    selectedRoute = JSON.parse(localStorage.getItem("selectedRoute") || "[]");
+  }, [active]);
+
+  const point1 = selectedRoute.point1;
+  const point2 = selectedRoute.point2;
+  const point3 = selectedRoute.point3;
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: "AIzaSyCsWEFEzwVzLk6PTAWxhc-6WZzMzFKmamI",
     language: "ja",

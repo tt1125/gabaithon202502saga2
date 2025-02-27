@@ -55,7 +55,7 @@ export default function MultiRoutesMap({
   //
   // 2) ルート選択
   //
-  const [selectedRoute, setSelectedRoute] = useState<RouteType>("easy");
+  const [selectedEase, setSelectedEase] = useState<RouteType>("easy");
 
   //
   // 3) 現在地 (origin) を state で管理し、localStorage と同期
@@ -157,7 +157,7 @@ export default function MultiRoutesMap({
 
     // origin が既にあればルート計算
     if (origin) {
-      calculateAllRoutes(selectedRoute, origin);
+      calculateAllRoutes(selectedEase, origin);
     }
   }
 
@@ -380,7 +380,7 @@ export default function MultiRoutesMap({
   // ルート切り替え
   // =====================
   function handleRouteSelect(routeKey: RouteType) {
-    setSelectedRoute(routeKey);
+    setSelectedEase(routeKey);
     // origin が存在すれば計算
     if (origin) {
       calculateAllRoutes(routeKey, origin);
@@ -399,8 +399,8 @@ export default function MultiRoutesMap({
 
   const [isStartHovered, setIsStartHovered] = useState(false);
 
-  const handleStart = () => {
-    const { point1, point2, point3 } = suggestedRoutes[selectedRoute];
+  const handleStart = async () => {
+    const { point1, point2, point3 } = suggestedRoutes[selectedEase];
     const routeData = {
       origin: {
         lat: origin?.lat || 0,
@@ -411,7 +411,8 @@ export default function MultiRoutesMap({
       point2: { lat: point2.lat, lng: point2.lng, name: point2.name },
       point3: { lat: point3.lat, lng: point3.lng, name: point3.name },
     };
-    localStorage.setItem("selectedRoute", JSON.stringify(routeData));
+    localStorage.setItem("selectedEase", "");
+    localStorage.setItem("selectedEase", JSON.stringify(routeData));
     storedProgress(3);
   };
 
@@ -456,15 +457,15 @@ export default function MultiRoutesMap({
               className="relative px-6 py-3 rounded-lg font-bold text-white min-w-[100px]
                          shadow-lg transition-shadow hover:shadow-xl"
               style={{
-                backgroundColor: selectedRoute === id ? color : "#374151",
+                backgroundColor: selectedEase === id ? color : "#374151",
               }}
               whileHover={{
                 scale: 1.05,
-                backgroundColor: selectedRoute === id ? hoverColor : "#4B5563",
+                backgroundColor: selectedEase === id ? hoverColor : "#4B5563",
               }}
               whileTap={{ scale: 0.95 }}
             >
-              {selectedRoute === id && (
+              {selectedEase === id && (
                 <motion.div
                   layoutId="glow"
                   className="absolute inset-0 rounded-lg"
