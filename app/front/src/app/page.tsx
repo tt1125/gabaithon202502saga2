@@ -26,12 +26,14 @@ export default function Page() {
 
   const checkUserExists = async (id: string) => {
     try {
-      // const response = await fetch("/api/check_newcomer", {
+      // const response = await fetch("/check_newcomer", {
       //   method: "POST",
+      // headers: { "Content-Type": "application/json" },
       //   body: JSON.stringify({ id }),
       // });
-      const response = await fetch("http://localhost:5000/api/check_newcomer", {
+      const response = await fetch("http://localhost:5000/check_newcomer", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       });
 
@@ -43,7 +45,7 @@ export default function Page() {
     }
   };
   const handleClosePopup = () => {
-    setIsNewUser(false);
+    setIsNewUser(true);
   };
 
   useEffect(() => {
