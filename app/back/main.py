@@ -13,6 +13,8 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import Mapped, mapped_column
 from dotenv import load_dotenv
 
+from lib.embedding import get_embedding
+
 load_dotenv()
 
 
@@ -472,71 +474,111 @@ def post():
 
 
 @app.route("/api/posts", methods=["POST"])
-def post():
+def create_post():
+    """新しい投稿をデータベースに格納するエンドポイント"""
+    # JSON データを取得
     data = request.get_json()
-    if not isinstance(data, dict):
-        return jsonify({"error": "Invalid JSON format"}), 400
-
-    title = data.get("title")
-    comment = data.get("comment")
-    embedding = data.get("embedding", [])
-    created_by = data.get("created_by")
-    created_at = data.get("created_at")
-    origin_lat = data.get("origin_lat")
-    origin_lng = data.get("origin_lng")
-    origin_name = data.get("origin_name")
-    point1_lat = data.get("point1_lat")
-    point1_lng = data.get("point1_lng")
-    point1_name = data.get("point1_name")
-    point2_lat = data.get("point2_lat")
-    point2_lng = data.get("point2_lng")
-    point2_name = data.get("point2_name")
-    point3_lat = data.get("point3_lat")
-    point3_lng = data.get("point3_lng")
-    point3_name = data.get("point3_name")
-
-    if (
-        not title
-        or not comment
-        or not created_by
-        or not created_at
-        or not origin_lat
-        or not origin_lng
-        or not origin_name
-    ):
-        return jsonify({"error": "Required fields are missing"}), 400
-
-    # embedding を適切な形式に変換
-    embedding_vector = f"({','.join(map(str, embedding))})"
-
+    # 必須フィールドのバリデーション
+    required_fields = [
+        "title",
+        "comment",
+        "created_by",
+        "created_at",
+        "origin_lat",
+        "origin_lng",
+        "origin_name",
+    ]
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Missing required field: {field}"}), 400
+    # :画鋲: エンべディング用のテキストを作成
+    embedding_text = f"""
+    Title: {data['title']}
+    Comment: {data['comment']}
+    Origin: {data['origin_name']}
+    Stops: {', '.join(filter(None, [
+        data.get('point1_name'),
+        data.get('point2_name'),
+        data.get('point3_name')
+    ]))}
+    """.strip()
+    # :画鋲: エンべディングを取得
+    embedding_vector = get_embedding(embedding_text)
+    # 新しい `Post` インスタンスを作成
     new_post = Posts(
-        title=title,
-        comment=comment,
-        embedding=embedding_vector,
-        created_by=created_by,
-        created_at=created_at,
-        origin_lat=origin_lat,
-        origin_lng=origin_lng,
-        origin_name=origin_name,
-        point1_lat=point1_lat,
-        point1_lng=point1_lng,
-        point1_name=point1_name,
-        point2_lat=point2_lat,
-        point2_lng=point2_lng,
-        point2_name=point2_name,
-        point3_lat=point3_lat,
-        point3_lng=point3_lng,
-        point3_name=point3_name,
+        title=data["title"],
+        comment=data["comment"],
+        embedding=embedding_vector,  # ここにエンべディングを格納
+        created_by=data["created_by"],
+        created_at=data["created_at"],
+        origin_lat=data["origin_lat"],
+        origin_lng=data["origin_lng"],
+        origin_name=data["origin_name"],
+        point1_lat=data.get("point1_lat"),
+        point1_lng=data.get("point1_lng"),
+        point1_name=data.get("point1_name"),
+        point2_lat=data.get("point2_lat"),
+        point2_lng=data.get("point2_lng"),
+        point2_name=data.get("point2_name"),
+        point3_lat=data.get("point3_lat"),
+        point3_lng=data.get("point3_lng"),
+        point3_name=data.get("point3_name"),
     )
+    # データベースに保存
     db.session.add(new_post)
     db.session.commit()
+    return jsonify({"message": "Post created successfully", "id": new_post.id}), 201
 
-    return (
-        jsonify(
-            {"id": new_post.id, "title": new_post.title, "comment": new_post.comment}
-        ),
-        201,
+
+@app.route("/api/search", methods=["POST"])
+def search_posts():
+    data = request.get_json()
+    if not data or "query" not in data:
+        return jsonify({"error": "Missing query parameter"}), 400
+    # ユーザー入力テキストをエンべディング化
+    query_text = data["query"]
+    query_embedding = get_embedding(query_text)
+    # 検索時のパラメータ（max_distance はスケール調整用）
+    max_distance = 100
+    # Post.embedding は Vector(1536) 型なので、get_embedding() で取得したベクトルと L2 距離を計算
+    actual_distance = Posts.embedding.l2_distance(query_embedding)
+    # スコア = 1 - (distance / max_distance) を計算し、負の場合は 0 とする
+    vector_search_score = (1 - actual_distance / max_distance).label(
+        "vector_search_score"
     )
+    vector_search_score = func.greatest(vector_search_score, 0)
+    # 類似度スコアが高い順に３件取得
+    stmt = (
+        select(Posts, vector_search_score, actual_distance.label("distance"))
+        .order_by(vector_search_score.desc())
+        .limit(3)
+    )
+    results = db.session.execute(stmt).all()
+    # 結果を整形してレスポンスに
+    formatted_results = [
+        {
+            "title": result.Post.title,
+            "comment": result.Post.comment,
+            "created_by": result.Post.created_by,
+            "created_at": result.Post.created_at,
+            "origin_lat": result.Post.origin_lat,
+            "origin_lng": result.Post.origin_lng,
+            "origin_name": result.Post.origin_name,
+            "point1_lat": result.Post.point1_lat,
+            "point1_lng": result.Post.point1_lng,
+            "point1_name": result.Post.point1_name,
+            "point2_lat": result.Post.point2_lat,
+            "point2_lng": result.Post.point2_lng,
+            "point2_name": result.Post.point2_name,
+            "point3_lat": result.Post.point3_lat,
+            "point3_lng": result.Post.point3_lng,
+            "point3_name": result.Post.point3_name,
+            "score": float(result[1]),
+            "distance": float(result[2]),
+        }
+        for result in results
+    ]
+    return jsonify(formatted_results), 200
 
 
 if __name__ == "__main__":
