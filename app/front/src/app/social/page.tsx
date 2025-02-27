@@ -23,7 +23,7 @@ export default function Page() {
   const userIconUrl = loggedInUser.user?.photoURL;
 
   return (
-    <div>
+    <div style={{ zIndex: 5 }}>
       <main className="h-screen bg-white">
         <Box
           sx={{

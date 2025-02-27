@@ -48,10 +48,6 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
   // --- 固定の目的地たち (文字列 or 座標でOK) ---
   let selectedRoute = JSON.parse(localStorage.getItem("selectedRoute") || "[]");
 
-  useEffect(() => {
-    selectedRoute = JSON.parse(localStorage.getItem("selectedRoute") || "[]");
-  }, [active]);
-
   const point1 = selectedRoute.point1;
   const point2 = selectedRoute.point2;
   const point3 = selectedRoute.point3;
@@ -59,6 +55,14 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
     googleMapsApiKey: "AIzaSyCsWEFEzwVzLk6PTAWxhc-6WZzMzFKmamI",
     language: "ja",
   });
+
+  useEffect(() => {
+    selectedRoute = JSON.parse(localStorage.getItem("selectedRoute") || "[]");
+  }, [active]);
+
+  useEffect(() => {
+    console.log(isLoaded, mapCenter);
+  }, [isLoaded, mapCenter]);
 
   // =====================
   // 位置情報を ref で保持
@@ -472,6 +476,8 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
           if (distanceToInitialPosition < 50) {
             // 50メートル以内に近づいたら
             route4RendererRef.current?.setMap(null); // 初期位置へのルートを削除
+            setActive(false);
+            localStorage.setItem("progress", "5");
           }
         }
       }
@@ -558,7 +564,30 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("progress", "1");
+    let progress = JSON.parse(localStorage.getItem("progress") || "0");
+    if (progress >= 1 && progress <= 4) {
+      setActive(true);
+    } else {
+      setActive(false);
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const newPos: Coordinates = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          };
+          setMapCenter(newPos); // 現在地をmapCenterに設定
+        },
+        (err) => {
+          console.error("Geolocation getCurrentPosition error:", err);
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      console.error("Geolocation not supported");
+    }
   }, []);
 
   // =====================
@@ -566,7 +595,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
   // =====================
   return (
     <GoogleMapContext.Provider value={{ active, setActive, isLoaded }}>
-      {isLoaded && mapCenter && (
+      {isLoaded && mapCenter && active && (
         <div
           style={{
             width: "100%",
@@ -589,13 +618,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
           />
         </div>
       )}
-      <div
-        style={{
-          zIndex: active ? -2 : "auto",
-        }}
-      >
-        {children}
-      </div>
+      {children}
     </GoogleMapContext.Provider>
   );
 }
