@@ -11,6 +11,7 @@ from lib.hello_world import hello_world
 
 from flask import request, jsonify #よく分からんけど，ちょっと追加してみた．
 from sqlalchemy.exc import IntegrityError
+from datetime import datetime
 
 app = Flask(__name__, static_folder="../front/out", static_url_path="")
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -41,7 +42,7 @@ class Posts(db.Model):
     comment: Mapped[str] = mapped_column(db.String,nullable=False)
     embedding: Mapped[Vector] = mapped_column(Vector(1536))
     created_by: Mapped[str] = mapped_column(db.String,nullable=False)
-    created_at: Mapped[float] = mapped_column(db.Float,nullable=False)
+    created_at: Mapped[datetime] = mapped_column(db.DateTime,nullable=False)
     origin_lat: Mapped[float] = mapped_column(db.Float,nullable=False)
     origin_lng: Mapped[float] = mapped_column(db.Float,nullable=False)
     origin_name: Mapped[str] = mapped_column(db.String,nullable=False)
@@ -101,7 +102,7 @@ def check_newcomer():
     if not json or 'id' not in json:
         return jsonify({'error': 'Invalid!'}),400
     
-    user = Users.query.filter_by(id=json['id'].first())
+    user = Users.query.filter_by(id=json['id']).first()
 
     if user:
         return jsonify({'is_new_user': True}),200
