@@ -388,6 +388,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
           if (distanceToPoint2 < 50) {
             // 50メートル以内に近づいたら
             route2RendererRef.current?.setMap(null); // point2へのルートを削除
+            localStorage.setItem("progress", "3");
           } else {
             // point2から離れたら再度point3へのルートを表示
             if (route3RendererRef.current) {
