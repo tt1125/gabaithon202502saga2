@@ -1,6 +1,12 @@
 "use client";
+import { PostData } from "@/app/social/page";
 import { Avatar, Box, Typography, Paper } from "@mui/material";
-export default function PostItem({ postData }: any) {
+
+type PostItemProps = {
+  postData: PostData;
+};
+
+export default function PostItem({ postData }: PostItemProps) {
   return (
     <Paper
       elevation={1}
@@ -40,7 +46,7 @@ export default function PostItem({ postData }: any) {
               {postData.name}
             </Typography>
             <Typography variant="caption" sx={{ color: "text.secondary" }}>
-              {postData.create_at}
+              {postData.created_at}
             </Typography>
           </Box>
           <Typography

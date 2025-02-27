@@ -161,6 +161,9 @@ def get_recent_posts():
 
     for post in posts:
         post_user = Users.query.filter_by(id=post.created_by).first()
+        if post_user is None:
+            continue  # ユーザーが見つからない場合はスキップ
+
         posts_list.append(
             {
                 "id": post.id,
