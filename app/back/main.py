@@ -443,7 +443,7 @@ def create_post():
             created_at=current_jst_time,
             origin_lat=data["origin_lat"],
             origin_lng=data["origin_lng"],
-            origin_name=data["origin_name"],
+            origin_name=origin_name,
             point1_lat=data.get("point1_lat"),
             point1_lng=data.get("point1_lng"),
             point1_name=data.get("point1_name"),
