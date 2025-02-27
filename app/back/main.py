@@ -12,6 +12,7 @@ import requests
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import Mapped, mapped_column
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
@@ -216,6 +217,7 @@ def get_routes():
             )
 
     return jsonify(routes)
+
 
 @app.route("/hello_world")
 def hello_world_test():
