@@ -5,12 +5,20 @@ import Select from "@/components/Select";
 import Start from "@/components/Start";
 import { DUMMY_DATA } from "@/const/dummy";
 import { useGoogleMapContext } from "@/context/GoogleMapContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext, use } from "react";
+import { AuthContext } from "@/context/AuthContext";
 
 export default function Page() {
   const [progress, storedProgress] = useState(0);
   const [suggestedRoutes, setSuggestedRoutes] = useState<SuggestedRoutes>();
   const { active, setActive } = useGoogleMapContext();
+
+  const [isNewUser, setIsNewUser] = useState<boolean>(true);
+
+  //認証中のユーザーのデータをとってくる．
+  const loggedInUser = useContext(AuthContext);
+  const userData = loggedInUser?.user;
+  console.log(userData);
 
   const getSuggestedRoute = async () => {
     const routes = DUMMY_DATA;
@@ -18,6 +26,34 @@ export default function Page() {
     setSuggestedRoutes(routes);
     storedProgress(2);
   };
+
+  const checkUserExists = async (id: string) => {
+    try {
+      // const response = await fetch("/api/check_newcomer", {
+      //   method: "POST",
+      //   body: JSON.stringify({ id }),
+      // });
+      const response = await fetch("http://localhost:5000/api/check_newcomer", {
+        method: "POST",
+        body: JSON.stringify({ id }),
+      });
+
+      const data = await response.json();
+      console.log("data", data);
+      setIsNewUser(data.is_new_user);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const handleClosePopup = () => {
+    setIsNewUser(false);
+  };
+
+  useEffect(() => {
+    if (!userData) return;
+    checkUserExists(userData.uid);
+    console.log("checkUser");
+  }, []);
 
   useEffect(() => {
     if (progress === 1) {
@@ -27,6 +63,7 @@ export default function Page() {
       setActive(true);
     }
   }, [progress]);
+
 
   useEffect(() => {
     const savedProgress = localStorage.getItem("progress");
@@ -59,5 +96,6 @@ export default function Page() {
       case 4:
         return <>end</>;
     }
+
   }
 }
