@@ -4,6 +4,8 @@ import { useGoogleMapContext } from "@/context/GoogleMapContext";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Footprints, MapPin, Activity } from "lucide-react";
+import Prompt from "./Prompt";
+import { useRouter, usePathname } from "next/navigation";
 
 type StartProps = {
   progress: number;
@@ -11,6 +13,7 @@ type StartProps = {
 };
 
 export default function Start({ progress, setProgress }: StartProps) {
+  const router = useRouter();
   return (
     <main className="h-screen bg-white">
       <div className="w-full h-full flex flex-col  overflow-hidden shadow-2xl bg-white">
@@ -54,6 +57,9 @@ export default function Start({ progress, setProgress }: StartProps) {
             </p>
           </div>
 
+          {/*　プロンプト入力欄　*/}
+          <Prompt />
+
           {/* スタートボタン */}
           <div className="pt-4">
             <div>
@@ -64,6 +70,9 @@ export default function Start({ progress, setProgress }: StartProps) {
                 className="w-full h-14 text-lg font-medium bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 rounded-full shadow-lg"
               >
                 スタート
+              </Button>
+              <Button onClick={() => router.push("/result")}>
+                完走後の画面　テスト用
               </Button>
             </div>
           </div>
