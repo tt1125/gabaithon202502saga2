@@ -44,7 +44,7 @@ export default function Start({
               <Footprints className="h-6 w-6 text-white" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-white z-10">WalkBuddy</h1>
+          <h1 className="text-4xl font-bold text-white z-10">WalkBuddy</h1>
         </div>
 
         {/* メインコンテンツ */}
