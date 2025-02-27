@@ -415,6 +415,7 @@ export default function MultiRoutesMap({
     console.log("Route Data:", routeData);
     localStorage.setItem("selectedRoute", "");
     localStorage.setItem("selectedRoute", JSON.stringify(routeData));
+    localStorage.setItem("progress", JSON.stringify(1));
     storedProgress(3);
   };
 

@@ -254,51 +254,56 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    route4RendererRef.current = new google.maps.DirectionsRenderer({
-      polylineOptions: {
-        strokeColor: "#DB4437", // 赤
-        zIndex: 1, // 最も低い優先順位
-        strokeWeight: 5, // 太さを指定
-      },
-      suppressMarkers: true,
-      preserveViewport: true,
-    });
-    route4RendererRef.current.setMap(map);
+    if (parseInt(localStorage.getItem("progress") || "1") < 5) {
+      route4RendererRef.current = new google.maps.DirectionsRenderer({
+        polylineOptions: {
+          strokeColor: "#DB4437", // 赤
+          zIndex: 1, // 最も低い優先順位
+          strokeWeight: 5, // 太さを指定
+        },
+        suppressMarkers: true,
+        preserveViewport: true,
+      });
+      route4RendererRef.current.setMap(map);
+    }
+    if (parseInt(localStorage.getItem("progress") || "1") < 4) {
+      route3RendererRef.current = new google.maps.DirectionsRenderer({
+        polylineOptions: {
+          strokeColor: "#FBBC05", // 黄
+          zIndex: 2,
+          strokeWeight: 5, // 太さを指定
+        },
+        suppressMarkers: true,
+        preserveViewport: true,
+      });
+      route3RendererRef.current.setMap(map);
+    }
+    if (parseInt(localStorage.getItem("progress") || "1") < 3) {
+      route2RendererRef.current = new google.maps.DirectionsRenderer({
+        polylineOptions: {
+          strokeColor: "#34A853", // 緑
+          zIndex: 3,
+          strokeWeight: 5, // 太さを指定
+        },
+        suppressMarkers: true,
+        preserveViewport: true,
+      });
+      route2RendererRef.current.setMap(map);
+    }
 
-    route3RendererRef.current = new google.maps.DirectionsRenderer({
-      polylineOptions: {
-        strokeColor: "#FBBC05", // 黄
-        zIndex: 2,
-        strokeWeight: 5, // 太さを指定
-      },
-      suppressMarkers: true,
-      preserveViewport: true,
-    });
-    route3RendererRef.current.setMap(map);
-
-    route2RendererRef.current = new google.maps.DirectionsRenderer({
-      polylineOptions: {
-        strokeColor: "#34A853", // 緑
-        zIndex: 3,
-        strokeWeight: 5, // 太さを指定
-      },
-      suppressMarkers: true,
-      preserveViewport: true,
-    });
-    route2RendererRef.current.setMap(map);
-
-    // --- ① DirectionsRenderer を作成し、それぞれマップへセット ---
-    route1RendererRef.current = new google.maps.DirectionsRenderer({
-      polylineOptions: {
-        strokeColor: "#4285F4", // 青
-        zIndex: 4, // 最も高い優先順位
-        strokeWeight: 5, // 太さを指定
-      },
-      suppressMarkers: true,
-      preserveViewport: true,
-    });
-    route1RendererRef.current.setMap(map);
-
+    if (parseInt(localStorage.getItem("progress") || "1") < 2) {
+      // --- ① DirectionsRenderer を作成し、それぞれマップへセット ---
+      route1RendererRef.current = new google.maps.DirectionsRenderer({
+        polylineOptions: {
+          strokeColor: "#4285F4", // 青
+          zIndex: 4, // 最も高い優先順位
+          strokeWeight: 5, // 太さを指定
+        },
+        suppressMarkers: true,
+        preserveViewport: true,
+      });
+      route1RendererRef.current.setMap(map);
+    }
     // --- ② 固定ルート(point1→point2, point2→point3, point3→現在地)を計算 ---
     calculateFixedRoutes();
   }
