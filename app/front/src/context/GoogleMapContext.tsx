@@ -198,12 +198,30 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
         } else if (storedProgress == 2) {
           // point1→point2 ルートを更新
           calculateRouteToPoint2(currentPointRef.current!);
+          if (route1RendererRef.current) {
+            route1RendererRef.current.setMap(null);
+          }
         } else if (storedProgress == 3) {
           // point2→point3 ルートを更新
           calculateRouteToPoint3(currentPointRef.current!);
+          if (route1RendererRef.current) {
+            route1RendererRef.current.setMap(null);
+          }
+          if (route2RendererRef.current) {
+            route2RendererRef.current.setMap(null);
+          }
         } else if (storedProgress == 4) {
           // point3→初期位置 ルートを更新
           calculateRouteToPoint4(currentPointRef.current!);
+          if (route1RendererRef.current) {
+            route1RendererRef.current.setMap(null);
+          }
+          if (route2RendererRef.current) {
+            route2RendererRef.current.setMap(null);
+          }
+          if (route3RendererRef.current) {
+            route3RendererRef.current.setMap(null);
+          }
         }
 
         // ユーザーのピンを更新
