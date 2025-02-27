@@ -10,6 +10,13 @@ import { AuthContext } from "@/context/AuthContext";
 import { END_POINT } from "@/const/endpoint";
 import Result from "@/components/Result";
 
+type SuggestedRoute = {
+  mode: string;
+  point1: { lat: number; lng: number; name: string };
+  point2: { lat: number; lng: number; name: string };
+  point3: { lat: number; lng: number; name: string };
+};
+
 export default function Page() {
   const [progress, storedProgress] = useState(0);
   const [suggestedRoutes, setSuggestedRoutes] = useState<SuggestedRoutes>();
@@ -32,11 +39,15 @@ export default function Page() {
         }),
       });
       const data = await response.json();
-      const easyRoute = data.find((route: any) => route.mode === "easy mode");
-      const normalRoute = data.find(
-        (route: any) => route.mode === "normal mode"
+      const easyRoute = data.find(
+        (route: SuggestedRoute) => route.mode === "easy mode",
       );
-      const hardRoute = data.find((route: any) => route.mode === "hard mode");
+      const normalRoute = data.find(
+        (route: SuggestedRoute) => route.mode === "normal mode",
+      );
+      const hardRoute = data.find(
+        (route: SuggestedRoute) => route.mode === "hard mode",
+      );
       const routes = {
         normal: normalRoute,
         easy: easyRoute,
