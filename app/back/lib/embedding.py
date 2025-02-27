@@ -15,7 +15,6 @@ def get_embedding(text: str, model: str = "openai", api_key: str = None):
         list: ベクトル化されたリスト
     """
 
-    
     if model == "openai":
         if api_key:
             os.environ["OPENAI_API_KEY"] = api_key

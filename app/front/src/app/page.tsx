@@ -1,101 +1,122 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+import Loading from "@/components/Loading";
+import Select from "@/components/Select";
+import Start from "@/components/Start";
+import { DUMMY_DATA } from "@/const/dummy";
+import { useGoogleMapContext } from "@/context/GoogleMapContext";
+import { useEffect, useState, useContext, use } from "react";
+import { AuthContext } from "@/context/AuthContext";
+import { END_POINT } from "@/const/endpoint";
+import Result from "@/components/Result";
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+export default function Page() {
+  const [progress, storedProgress] = useState(0);
+  const [suggestedRoutes, setSuggestedRoutes] = useState<SuggestedRoutes>();
+  const { active, setActive, currentLat, currentLng } = useGoogleMapContext();
+
+  const [isNewUser, setIsNewUser] = useState<boolean>(true);
+
+  //認証中のユーザーのデータをとってくる．
+  const loggedInUser = useContext(AuthContext);
+  const userData = loggedInUser?.user;
+
+  const getSuggestedRoute = async () => {
+    try {
+      const response = await fetch(`${END_POINT}/api/suggestion_routes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          current_location_lat: currentLat,
+          current_location_lng: currentLng,
+        }),
+      });
+      const data = await response.json();
+      const easyRoute = data.find((route: any) => route.mode === "easy mode");
+      const normalRoute = data.find(
+        (route: any) => route.mode === "normal mode"
+      );
+      const hardRoute = data.find((route: any) => route.mode === "hard mode");
+      const routes = {
+        normal: normalRoute,
+        easy: easyRoute,
+        hard: hardRoute,
+      };
+      setSuggestedRoutes(routes);
+      storedProgress(2);
+    } catch (error) {
+      console.error("Error obtaining location", error);
+      storedProgress(1);
+    }
+  };
+
+  const checkUserExists = async (id: string) => {
+    try {
+      const response = await fetch(`${END_POINT}/check_newcomer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+
+      const data = await response.json();
+      setIsNewUser(data.is_new_user);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const handleClosePopup = () => {
+    setIsNewUser(true);
+  };
+
+  useEffect(() => {
+    if (!userData) return;
+    checkUserExists(userData.uid);
+  }, []);
+
+  useEffect(() => {
+    if (progress === 3) {
+      setActive(true);
+    }
+  }, [progress]);
+
+  useEffect(() => {
+    const savedProgress = localStorage.getItem("progress");
+    if (savedProgress === "5") {
+      storedProgress(4);
+    }
+  }, [active]);
+
+  {
+    switch (progress) {
+      case 0:
+        return (
+          !active && (
+            <Start
+              handleClosePopup={handleClosePopup}
+              isNewUser={isNewUser}
+              progress={progress}
+              setProgress={storedProgress}
+              getSuggestedRoute={getSuggestedRoute}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+          )
+        );
+      case 1:
+        return (
+          !active && <Loading message="現在地からルートを生成しています" />
+        );
+      case 2:
+        return (
+          !active && (
+            <Select
+              suggestedRoutes={suggestedRoutes!}
+              storedProgress={storedProgress}
+            />
+          )
+        );
+      case 3:
+        return <></>;
+      case 4:
+        return <Result setProgress={storedProgress} />;
+    }
+  }
 }
