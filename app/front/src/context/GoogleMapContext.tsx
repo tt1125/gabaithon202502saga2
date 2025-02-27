@@ -45,9 +45,9 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
   const [active, setActive] = useState(false);
 
   // --- 固定の目的地たち (文字列 or 座標でOK) ---
-  const point1 = { lat: 33.303841951880464, lng: 130.50917614974222 };
-  const point2 = { lat: 33.30616086795037, lng: 130.5102654362774 };
-  const point3 = { lat: 33.30581594904022, lng: 130.5145199784839 };
+  const point1 = { lat: 33.373914, lng: 130.206551 };
+  const point2 = { lat: 33.373578, lng: 130.208156 };
+  const point3 = { lat: 33.371796, lng: 130.20775 };
 
   // --- Google Maps 読み込み ---
   const { isLoaded } = useJsApiLoader({
@@ -187,11 +187,24 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
         currentPointRef.current = newPos;
         setMapCenter(newPos);
 
-        // クリックした位置の緯度と経度をコンソールに出力
-        console.log("Clicked position:", newPos);
+        let storedProgress = parseInt(localStorage.getItem("progress") || "1");
+        if (!storedProgress) {
+          storedProgress = 1;
+        }
 
-        // 現在地→point1 ルートを更新
-        calculateRoute1(newPos);
+        if (storedProgress == 1) {
+          // 現在地→point1 ルートを更新
+          calculateRoute1(newPos);
+        } else if (storedProgress == 2) {
+          // point1→point2 ルートを更新
+          calculateRouteToPoint2(currentPointRef.current!);
+        } else if (storedProgress == 3) {
+          // point2→point3 ルートを更新
+          calculateRouteToPoint3(currentPointRef.current!);
+        } else if (storedProgress == 4) {
+          // point3→初期位置 ルートを更新
+          calculateRouteToPoint4(currentPointRef.current!);
+        }
 
         // ユーザーのピンを更新
         if (userMarkerRef.current) {
@@ -324,6 +337,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
   // =====================
   // 現在地→point1 のリアルタイム計算
   // =====================
+
   function calculateRoute1(currentPos: Coordinates) {
     if (!mapRef.current || !route1RendererRef.current) return;
     const directionsService = new google.maps.DirectionsService();
@@ -337,10 +351,136 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
       (result, status) => {
         if (status === "OK") {
           route1RendererRef.current?.setDirections(result);
+
+          const distanceToPoint1 =
+            google.maps.geometry.spherical.computeDistanceBetween(
+              new google.maps.LatLng(currentPos.lat, currentPos.lng),
+              new google.maps.LatLng(point1.lat, point1.lng)
+            );
+
+          if (distanceToPoint1 < 50) {
+            // 50メートル以内に近づいたら
+            route1RendererRef.current?.setMap(null); // point1へのルートを削除
+            localStorage.setItem("progress", "2");
+          } else {
+            // point1から離れたら再度point2へのルートを表示
+            if (route2RendererRef.current) {
+              route2RendererRef.current.setMap(mapRef.current);
+            }
+          }
         }
       }
     );
   }
+
+  function calculateRouteToPoint2(currentPos: Coordinates) {
+    if (!mapRef.current || !route2RendererRef.current) return;
+    const directionsService = new google.maps.DirectionsService();
+
+    directionsService.route(
+      {
+        origin: currentPos,
+        destination: point2,
+        travelMode: google.maps.TravelMode.WALKING,
+      },
+      (result, status) => {
+        if (status === "OK") {
+          route2RendererRef.current?.setDirections(result);
+
+          const distanceToPoint2 =
+            google.maps.geometry.spherical.computeDistanceBetween(
+              new google.maps.LatLng(currentPos.lat, currentPos.lng),
+              new google.maps.LatLng(point2.lat, point2.lng)
+            );
+
+          if (distanceToPoint2 < 50) {
+            // 50メートル以内に近づいたら
+            route2RendererRef.current?.setMap(null); // point2へのルートを削除
+          } else {
+            // point2から離れたら再度point3へのルートを表示
+            if (route3RendererRef.current) {
+              route3RendererRef.current.setMap(mapRef.current);
+            }
+          }
+        }
+      }
+    );
+  }
+
+  function calculateRouteToPoint3(currentPos: Coordinates) {
+    if (!mapRef.current || !route3RendererRef.current) return;
+    const directionsService = new google.maps.DirectionsService();
+
+    directionsService.route(
+      {
+        origin: currentPos,
+        destination: point3,
+        travelMode: google.maps.TravelMode.WALKING,
+      },
+      (result, status) => {
+        if (status === "OK") {
+          route3RendererRef.current?.setDirections(result);
+
+          const distanceToPoint3 =
+            google.maps.geometry.spherical.computeDistanceBetween(
+              new google.maps.LatLng(currentPos.lat, currentPos.lng),
+              new google.maps.LatLng(point3.lat, point3.lng)
+            );
+
+          if (distanceToPoint3 < 50) {
+            // 50メートル以内に近づいたら
+            route3RendererRef.current?.setMap(null); // point3へのルートを削除
+            localStorage.setItem("progress", "4");
+          } else {
+            // point3から離れたら再度初期位置へのルートを表示
+            if (route4RendererRef.current) {
+              route4RendererRef.current.setMap(mapRef.current);
+            }
+          }
+        }
+      }
+    );
+  }
+
+  // ... existing code ...
+
+  function calculateRouteToPoint4(currentPos: Coordinates) {
+    if (
+      !mapRef.current ||
+      !route4RendererRef.current ||
+      !initialPositionRef.current
+    )
+      return;
+    const directionsService = new google.maps.DirectionsService();
+
+    directionsService.route(
+      {
+        origin: currentPos,
+        destination: initialPositionRef.current,
+        travelMode: google.maps.TravelMode.WALKING,
+      },
+      (result, status) => {
+        if (status === "OK" && initialPositionRef.current) {
+          route4RendererRef.current?.setDirections(result);
+
+          const distanceToInitialPosition =
+            google.maps.geometry.spherical.computeDistanceBetween(
+              new google.maps.LatLng(currentPos.lat, currentPos.lng),
+              new google.maps.LatLng(
+                initialPositionRef.current.lat,
+                initialPositionRef.current.lng
+              )
+            );
+
+          if (distanceToInitialPosition < 50) {
+            // 50メートル以内に近づいたら
+            route4RendererRef.current?.setMap(null); // 初期位置へのルートを削除
+          }
+        }
+      }
+    );
+  }
+
   useEffect(() => {
     if (!navigator.geolocation) {
       console.error("Geolocation not supported");
@@ -363,9 +503,23 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
         // マップの中心を新しい現在地に移動
         setMapCenter(newPos);
 
-        // 現在地→point1 ルートを更新
-        calculateRoute1(newPos);
-
+        let storedProgress = parseInt(localStorage.getItem("progress") || "1");
+        if (!storedProgress) {
+          storedProgress = 1;
+        }
+        if (storedProgress == 1) {
+          // 現在地→point1 ルートを更新
+          calculateRoute1(newPos);
+        } else if (storedProgress == 2) {
+          // point1→point2 ルートを更新
+          calculateRouteToPoint2(currentPointRef.current!);
+        } else if (storedProgress == 3) {
+          // point2→point3 ルートを更新
+          calculateRouteToPoint3(currentPointRef.current!);
+        } else if (storedProgress == 4) {
+          // point3→初期位置 ルートを更新
+          calculateRouteToPoint4(currentPointRef.current!);
+        }
         // ユーザーのピンを更新
         if (userMarkerRef.current) {
           userMarkerRef.current.setPosition(newPos);
@@ -404,6 +558,10 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
       navigator.geolocation.clearWatch(watchId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("progress", "1");
   }, []);
 
   // =====================
