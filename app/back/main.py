@@ -75,30 +75,6 @@ class Users(db.Model):
     name: Mapped[str] = mapped_column(db.String,nullable=True)
     img_url: Mapped[str] = mapped_column(db.String,nullable=True)
 
-
-class Post(db.Model):
-    __tablename__ = "posts"
-
-    id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
-    title: Mapped[str] = mapped_column(db.String, nullable=False)
-    comment: Mapped[str] = mapped_column(db.String, nullable=False)
-    embedding: Mapped[list] = mapped_column(db.PickleType, nullable=True)
-    created_by: Mapped[str] = mapped_column(db.String, nullable=False)
-    created_at: Mapped[float] = mapped_column(db.Double, nullable=False)
-    origin_lat: Mapped[float] = mapped_column(db.Double, nullable=False)
-    origin_lng: Mapped[float] = mapped_column(db.Double, nullable=False)
-    origin_name: Mapped[str] = mapped_column(db.String, nullable=False)
-    point1_lat: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point1_lng: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point1_name: Mapped[str] = mapped_column(db.String, nullable=True)
-    point2_lat: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point2_lng: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point2_name: Mapped[str] = mapped_column(db.String, nullable=True)
-    point3_lat: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point3_lng: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point3_name: Mapped[str] = mapped_column(db.String, nullable=True)
-
-
 @app.route("/")
 def index():
     return send_from_directory("../front/out", "index.html")
@@ -132,19 +108,15 @@ def insert_userJSON():
 @app.route("/check_newcomer",methods=['POST'])
 def check_newcomer():
     json = request.get_json()
-
     if not json or 'id' not in json:
         return jsonify({'error': 'Invalid!'}),400
     
-    user = Users.query.filter_by(id=json['id'].first())
+    user = Users.query.filter_by(id=json['id']).first()
 
     if user:
         return jsonify({'is_new_user': True}),200
     else:
         return jsonify({'is_new_user': False}),200
-
-
-
 
 @app.route("/api/suggestion_routes", methods=["POST"])
 def get_routes():
