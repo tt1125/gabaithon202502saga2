@@ -43,6 +43,7 @@ class Test(db.Model):
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True, autoincrement=True)
     message: Mapped[str] = mapped_column(db.String, nullable=False)
 
+
 class Post(db.Model):
     __tablename__ = "posts"
 
@@ -115,7 +116,7 @@ class Comments(db.Model):
 
 
 @app.route("/")
-def index():        
+def index():
     return send_from_directory("../front/out", "index.html")
 
 
@@ -492,6 +493,7 @@ def post():
         201,
     )
 
+
 @app.route("/api/posts", methods=["POST"])
 def post():
     data = request.get_json()
@@ -516,7 +518,15 @@ def post():
     point3_lng = data.get("point3_lng")
     point3_name = data.get("point3_name")
 
-    if not title or not comment or not created_by or not created_at or not origin_lat or not origin_lng or not origin_name:
+    if (
+        not title
+        or not comment
+        or not created_by
+        or not created_at
+        or not origin_lat
+        or not origin_lng
+        or not origin_name
+    ):
         return jsonify({"error": "Required fields are missing"}), 400
 
     # embedding を適切な形式に変換
@@ -539,12 +549,18 @@ def post():
         point2_name=point2_name,
         point3_lat=point3_lat,
         point3_lng=point3_lng,
-        point3_name=point3_name
+        point3_name=point3_name,
     )
     db.session.add(new_post)
     db.session.commit()
 
-    return jsonify({"id": new_post.id, "title": new_post.title, "comment": new_post.comment}), 201
+    return (
+        jsonify(
+            {"id": new_post.id, "title": new_post.title, "comment": new_post.comment}
+        ),
+        201,
+    )
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
