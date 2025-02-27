@@ -13,6 +13,8 @@ from flask import request, jsonify #よく分からんけど，ちょっと追�
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 import numpy as np
+import datetime
+from datetime import datetime, timezone, timedelta
 
 app = Flask(__name__, static_folder="../front/out", static_url_path="")
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -64,6 +66,16 @@ class Users(db.Model):
     img_url: Mapped[str] = mapped_column(db.String,nullable=False)
     gender: Mapped[str] =  mapped_column(db.String,nullable=False)
     age: Mapped[int] = mapped_column(db.Integer, nullable=False)
+
+class Comments(db.Model):
+    __tablename__ = "comments"
+    id: Mapped[int] = mapped_column(db.Integer, primary_key=True, autoincrement=True)
+    post_id: Mapped[int] = mapped_column(db.Integer, nullable=False)
+    thread_id: Mapped[int] = mapped_column(db.Integer, nullable=False)
+    comment: Mapped[str] = mapped_column(db.String,nullable=False)
+    user_id: Mapped[str] =  mapped_column(db.String,nullable=False)
+    created_at: Mapped[datetime] = mapped_column(db.DateTime,nullable=False)
+
 
 
 @app.route("/")
@@ -121,12 +133,17 @@ def get_recent_posts():
     posts_list = []
 
     for post in posts:
+        post_user = Users.query.filter_by(id=post.created_by).first()
         posts_list.append({
             'id': post.id,
             'title': post.title,
             'comment': post.comment,
             'created_by': post.created_by,
             'created_at': post.created_at,
+            'name': post_user.name,
+            'img_url': post_user.img_url,
+            'gender': post_user.gender,
+            'age': post_user.age,
             'origin_lat': post.origin_lat,
             'origin_lng': post.origin_lng,
             'origin_name': post.origin_name,
@@ -145,9 +162,58 @@ def get_recent_posts():
     
     return jsonify({"result": posts_list}),200
 
+@app.route("/post_comment",methods=['POST'])
+def post_comment():
+    json = request.get_json()
 
+    if not json or 'post_id' not in json or 'user_id' not in json or 'comment' not in json:
+        return jsonify({'error': 'Invalid!'}), 400
+    
+    searchNum = 0
+    while(True):
+        #スレッド順にコメントを探索する．
+        tmp = Comments.query.filter_by(thread_id=searchNum,post_id=json['post_id']).first()
+        if(not tmp):
+            break
+        else:
+            searchNum += 1
+    
+    # 日本標準時 (JST) のタイムゾーンを定義
+    jst_timezone = timezone(timedelta(hours=9))
 
+    # 現在の日本時間を取得
+    current_jst_time = datetime.now(jst_timezone)
 
+    new_comment = Comments(created_at=current_jst_time,thread_id=searchNum,post_id=json['post_id'],user_id=json['user_id'],comment=json['comment'])
+
+    try:
+        db.session.add(new_comment)
+        db.session.commit()
+        return jsonify({'message': 'Add success!'}), 201
+    except IntegrityError: #IDは自動で割り振られるから，衝突するわけない．
+        db.session.rollback()
+        return jsonify({'error': 'ID Conflict!'}),409
+    except Exception as eX:
+        db.session.rollback()
+        return jsonify({'error': str(eX)}), 501
+
+@app.route("/get_comment",methods=['POST'])
+def get_commnet():
+    json =request.get_json()
+    if not json or 'post_id' not in json:
+        return jsonify({'error': 'Invalid!'}), 400
+    comments = Comments.query.filter_by(post_id=json['post_id']).order_by(Comments.created_at.desc()).all()
+    comments_list = []
+    for comment in comments:
+        comments_list.append({
+            'comment': comment.comment,
+            'user_id': comment.user_id,
+            'created_at': comment.created_at,
+            'thread_id': comment.thread_id            
+        })
+    comments_list = np.array(comments_list).tolist()
+    return jsonify({"result": comments_list}),200
+    
 
 
 @app.route("/hello_world")
