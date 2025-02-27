@@ -44,29 +44,6 @@ class Test(db.Model):
     message: Mapped[str] = mapped_column(db.String, nullable=False)
 
 
-class Post(db.Model):
-    __tablename__ = "posts"
-
-    id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
-    title: Mapped[str] = mapped_column(db.String, nullable=False)
-    comment: Mapped[str] = mapped_column(db.String, nullable=False)
-    embedding: Mapped[list] = mapped_column(db.PickleType, nullable=True)
-    created_by: Mapped[str] = mapped_column(db.String, nullable=False)
-    created_at: Mapped[float] = mapped_column(db.Double, nullable=False)
-    origin_lat: Mapped[float] = mapped_column(db.Double, nullable=False)
-    origin_lng: Mapped[float] = mapped_column(db.Double, nullable=False)
-    origin_name: Mapped[str] = mapped_column(db.String, nullable=False)
-    point1_lat: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point1_lng: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point1_name: Mapped[str] = mapped_column(db.String, nullable=True)
-    point2_lat: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point2_lng: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point2_name: Mapped[str] = mapped_column(db.String, nullable=True)
-    point3_lat: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point3_lng: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point3_name: Mapped[str] = mapped_column(db.String, nullable=True)
-
-
 class TestVector(db.Model):
     __tablename__ = "test_vector"
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True, autoincrement=True)
@@ -532,7 +509,7 @@ def post():
     # embedding を適切な形式に変換
     embedding_vector = f"({','.join(map(str, embedding))})"
 
-    new_post = Post(
+    new_post = Posts(
         title=title,
         comment=comment,
         embedding=embedding_vector,
