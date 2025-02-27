@@ -23,7 +23,7 @@ export default function Page() {
   const userIconUrl = loggedInUser.user?.photoURL;
 
   return (
-    <main className="h-screen bg-gradient-to-r from-purple-500 to-indigo-600">
+    <main  style={{ zIndex: 5 }}> className="h-screen bg-gradient-to-r from-purple-500 to-indigo-600">
       <Box
         sx={{
           width: "100%",

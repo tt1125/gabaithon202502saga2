@@ -16,10 +16,12 @@ import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
 type GoogleMapContextType = {
   active: boolean;
   setActive: (active: boolean) => void;
+  isLoaded: boolean;
 };
 const GoogleMapContext = createContext<GoogleMapContextType>({
   active: false,
   setActive: () => {},
+  isLoaded: false,
 });
 
 export function useGoogleMapContext() {
@@ -40,29 +42,27 @@ const containerStyle = {
 };
 
 export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
   const [mapCenter, setMapCenter] = useState<Coordinates | null>(null);
   const [active, setActive] = useState(false);
 
   // --- 固定の目的地たち (文字列 or 座標でOK) ---
-  const point1 = { lat: 33.373914, lng: 130.206551 };
-  const point2 = { lat: 33.373578, lng: 130.208156 };
-  const point3 = { lat: 33.371796, lng: 130.20775 };
+  let selectedRoute = JSON.parse(localStorage.getItem("selectedRoute") || "[]");
 
-  // --- Google Maps 読み込み ---
+  const point1 = selectedRoute.point1;
+  const point2 = selectedRoute.point2;
+  const point3 = selectedRoute.point3;
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: "AIzaSyCsWEFEzwVzLk6PTAWxhc-6WZzMzFKmamI",
     language: "ja",
   });
 
-  // --- ページ遷移でactiveをリセット (ご要望があれば) ---
   useEffect(() => {
-    if (pathname == "/") {
-      setActive(true);
-    } else {
-      setActive(false);
-    }
-  }, [pathname]);
+    selectedRoute = JSON.parse(localStorage.getItem("selectedRoute") || "[]");
+  }, [active]);
+
+  useEffect(() => {
+    console.log(isLoaded, mapCenter);
+  }, [isLoaded, mapCenter]);
 
   // =====================
   // 位置情報を ref で保持
@@ -230,7 +230,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
               if (status === "OK") {
                 route4RendererRef.current?.setDirections(result);
               }
-            },
+            }
           );
         }
       }
@@ -301,7 +301,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
           if (status === "OK" && route4RendererRef.current) {
             route4RendererRef.current.setDirections(result);
           }
-        },
+        }
       );
     }
 
@@ -316,7 +316,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
         if (status === "OK" && route3RendererRef.current) {
           route3RendererRef.current.setDirections(result);
         }
-      },
+      }
     );
 
     // ②-1) point1 → point2
@@ -330,7 +330,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
         if (status === "OK" && route2RendererRef.current) {
           route2RendererRef.current.setDirections(result);
         }
-      },
+      }
     );
   }
 
@@ -355,7 +355,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
           const distanceToPoint1 =
             google.maps.geometry.spherical.computeDistanceBetween(
               new google.maps.LatLng(currentPos.lat, currentPos.lng),
-              new google.maps.LatLng(point1.lat, point1.lng),
+              new google.maps.LatLng(point1.lat, point1.lng)
             );
 
           if (distanceToPoint1 < 50) {
@@ -369,7 +369,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
-      },
+      }
     );
   }
 
@@ -390,12 +390,13 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
           const distanceToPoint2 =
             google.maps.geometry.spherical.computeDistanceBetween(
               new google.maps.LatLng(currentPos.lat, currentPos.lng),
-              new google.maps.LatLng(point2.lat, point2.lng),
+              new google.maps.LatLng(point2.lat, point2.lng)
             );
 
           if (distanceToPoint2 < 50) {
             // 50メートル以内に近づいたら
             route2RendererRef.current?.setMap(null); // point2へのルートを削除
+            localStorage.setItem("progress", "3");
           } else {
             // point2から離れたら再度point3へのルートを表示
             if (route3RendererRef.current) {
@@ -403,7 +404,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
-      },
+      }
     );
   }
 
@@ -424,7 +425,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
           const distanceToPoint3 =
             google.maps.geometry.spherical.computeDistanceBetween(
               new google.maps.LatLng(currentPos.lat, currentPos.lng),
-              new google.maps.LatLng(point3.lat, point3.lng),
+              new google.maps.LatLng(point3.lat, point3.lng)
             );
 
           if (distanceToPoint3 < 50) {
@@ -438,7 +439,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
-      },
+      }
     );
   }
 
@@ -468,16 +469,18 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
               new google.maps.LatLng(currentPos.lat, currentPos.lng),
               new google.maps.LatLng(
                 initialPositionRef.current.lat,
-                initialPositionRef.current.lng,
-              ),
+                initialPositionRef.current.lng
+              )
             );
 
           if (distanceToInitialPosition < 50) {
             // 50メートル以内に近づいたら
             route4RendererRef.current?.setMap(null); // 初期位置へのルートを削除
+            setActive(false);
+            localStorage.setItem("progress", "5");
           }
         }
-      },
+      }
     );
   }
 
@@ -544,14 +547,14 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
               if (status === "OK") {
                 route4RendererRef.current?.setDirections(result);
               }
-            },
+            }
           );
         }
       },
       (err) => {
         console.error("Geolocation watchPosition error:", err);
       },
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 5000 },
+      { enableHighAccuracy: true, maximumAge: 2000, timeout: 5000 }
     );
 
     return () => {
@@ -561,15 +564,38 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("progress", "1");
+    let progress = JSON.parse(localStorage.getItem("progress") || "0");
+    if (progress >= 1 && progress <= 4) {
+      setActive(true);
+    } else {
+      setActive(false);
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const newPos: Coordinates = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          };
+          setMapCenter(newPos); // 現在地をmapCenterに設定
+        },
+        (err) => {
+          console.error("Geolocation getCurrentPosition error:", err);
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      console.error("Geolocation not supported");
+    }
   }, []);
 
   // =====================
   // 描画 (一度だけ)
   // =====================
   return (
-    <GoogleMapContext.Provider value={{ active, setActive }}>
-      {isLoaded && mapCenter ? (
+    <GoogleMapContext.Provider value={{ active, setActive, isLoaded }}>
+      {isLoaded && mapCenter && active && (
         <div
           style={{
             width: "100%",
@@ -591,16 +617,8 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
             }}
           />
         </div>
-      ) : (
-        <div>Loading...</div>
       )}
-      <div
-        style={{
-          zIndex: active ? -2 : "auto",
-        }}
-      >
-        {children}
-      </div>
+      {children}
     </GoogleMapContext.Provider>
   );
 }
