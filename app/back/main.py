@@ -12,6 +12,7 @@ from lib.hello_world import hello_world
 from flask import request, jsonify #よく分からんけど，ちょっと追加してみた．
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
+import numpy as np
 
 app = Flask(__name__, static_folder="../front/out", static_url_path="")
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -108,6 +109,43 @@ def check_newcomer():
         return jsonify({'is_new_user': True}),200
     else:
         return jsonify({'is_new_user': False}),200
+
+@app.route("/get_recent_posts",methods=['POST'])
+def get_recent_posts():
+    json = request.get_json()
+
+    if not json or 'offset' not in json:
+        return jsonify({'error': 'Invalid!'}),400
+    offset = json['offset']
+    posts = Posts.query.order_by(Posts.created_at.desc()).offset(offset).limit(10).all()
+    posts_list = []
+
+    for post in posts:
+        posts_list.append({
+            'id': post.id,
+            'title': post.title,
+            'comment': post.comment,
+            'created_by': post.created_by,
+            'created_at': post.created_at,
+            'origin_lat': post.origin_lat,
+            'origin_lng': post.origin_lng,
+            'origin_name': post.origin_name,
+            'point1_lat': post.point1_lat,
+            'point1_lng': post.point1_lng,
+            'point1_name': post.point1_name,
+            'point2_lat': post.point2_lat,
+            'point2_lng': post.point2_lng,
+            'point2_name': post.point2_name,
+            'point3_lat': post.point3_lat,
+            'point3_lng': post.point3_lng,
+            'point3_name': post.point3_name
+        })
+
+        posts_list = np.array(posts_list).tolist()
+    
+    return jsonify({"result": posts_list}),200
+
+
 
 
 
