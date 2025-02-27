@@ -15,7 +15,7 @@ export function Tab() {
   const router = useRouter();
   const currentPath = usePathname();
 
-  console.log(currentPath);
+  // console.log(currentPath);
 
   const tabs: TabItem[] = [
     {
