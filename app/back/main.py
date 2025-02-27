@@ -22,7 +22,7 @@ from sqlalchemy.sql import func
 
 from lib.hello_world import hello_world
 
-from flask import request, jsonify #よく分からんけど，ちょっと追加してみた．
+from flask import request, jsonify  # よく分からんけど，ちょっと追加してみた．
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 
@@ -49,34 +49,37 @@ class TestVector(db.Model):
     content: Mapped[str] = mapped_column(db.String, nullable=False)
     embedding: Mapped[Vector] = mapped_column(Vector(10))
 
+
 class Posts(db.Model):
     __tablename__ = "posts"
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True, autoincrement=True)
-    title: Mapped[str] = mapped_column(db.String,nullable=False)
-    comment: Mapped[str] = mapped_column(db.String,nullable=False)
+    title: Mapped[str] = mapped_column(db.String, nullable=False)
+    comment: Mapped[str] = mapped_column(db.String, nullable=False)
     embedding: Mapped[Vector] = mapped_column(Vector(1536))
-    created_by: Mapped[str] = mapped_column(db.String,nullable=False)
-    created_at: Mapped[datetime] = mapped_column(db.DateTime,nullable=False)
-    origin_lat: Mapped[float] = mapped_column(db.Float,nullable=False)
-    origin_lng: Mapped[float] = mapped_column(db.Float,nullable=False)
-    origin_name: Mapped[str] = mapped_column(db.String,nullable=False)
-    point1_lat: Mapped[float] = mapped_column(db.Float,nullable=False)
-    point1_lng: Mapped[float] = mapped_column(db.Float,nullable=False)
-    point1_name: Mapped[str] = mapped_column(db.String,nullable=False)
-    point2_lat: Mapped[float] = mapped_column(db.Float,nullable=False)
-    point2_lng: Mapped[float] = mapped_column(db.Float,nullable=False)
-    point2_name: Mapped[str] = mapped_column(db.String,nullable=False)
-    point3_lat: Mapped[float] = mapped_column(db.Float,nullable=False)
-    point3_lng: Mapped[float] = mapped_column(db.Float,nullable=False)
-    point3_name: Mapped[str] = mapped_column(db.String,nullable=False)
+    created_by: Mapped[str] = mapped_column(db.String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(db.DateTime, nullable=False)
+    origin_lat: Mapped[float] = mapped_column(db.Float, nullable=False)
+    origin_lng: Mapped[float] = mapped_column(db.Float, nullable=False)
+    origin_name: Mapped[str] = mapped_column(db.String, nullable=False)
+    point1_lat: Mapped[float] = mapped_column(db.Float, nullable=False)
+    point1_lng: Mapped[float] = mapped_column(db.Float, nullable=False)
+    point1_name: Mapped[str] = mapped_column(db.String, nullable=False)
+    point2_lat: Mapped[float] = mapped_column(db.Float, nullable=False)
+    point2_lng: Mapped[float] = mapped_column(db.Float, nullable=False)
+    point2_name: Mapped[str] = mapped_column(db.String, nullable=False)
+    point3_lat: Mapped[float] = mapped_column(db.Float, nullable=False)
+    point3_lng: Mapped[float] = mapped_column(db.Float, nullable=False)
+    point3_name: Mapped[str] = mapped_column(db.String, nullable=False)
+
 
 class Users(db.Model):
     __tablename__ = "users"
     id: Mapped[str] = mapped_column(db.String, primary_key=True)
-    name: Mapped[str] = mapped_column(db.String,nullable=False)
-    img_url: Mapped[str] = mapped_column(db.String,nullable=False)
-    gender: Mapped[str] =  mapped_column(db.String,nullable=False)
+    name: Mapped[str] = mapped_column(db.String, nullable=False)
+    img_url: Mapped[str] = mapped_column(db.String, nullable=False)
+    gender: Mapped[str] = mapped_column(db.String, nullable=False)
     age: Mapped[int] = mapped_column(db.Integer, nullable=False)
+
 
 @app.route("/")
 def index():
@@ -88,38 +91,54 @@ def test():
     record = Test.query.get(1)
     return {"id": record.id, "message": record.message}, 200
 
-@app.route("/user",methods=['POST'])
+
+@app.route("/user", methods=["POST"])
 def insert_userJSON():
 
     json = request.get_json()
 
-    if not json or 'id' not in json or 'img_url' not in json or 'name' not in json or 'gender' not in json or 'age' not in json:
-        return jsonify({'error': 'Invalid!'}), 400
-    new_user = Users(id=json['id'],img_url=json['img_url'],name=json['name'],gender=json['gender'],age=json['age'])
+    if (
+        not json
+        or "id" not in json
+        or "img_url" not in json
+        or "name" not in json
+        or "gender" not in json
+        or "age" not in json
+    ):
+        return jsonify({"error": "Invalid!"}), 400
+    new_user = Users(
+        id=json["id"],
+        img_url=json["img_url"],
+        name=json["name"],
+        gender=json["gender"],
+        age=json["age"],
+    )
 
     try:
         db.session.add(new_user)
         db.session.commit()
-        return jsonify({'message': 'Add success!'}), 201
+        return jsonify({"message": "Add success!"}), 201
     except IntegrityError:
         db.session.rollback()
-        return jsonify({'error': 'ID Conflict!'}),409
+        return jsonify({"error": "ID Conflict!"}), 409
     except Exception as eX:
         db.session.rollback()
-        return jsonify({'error': str(eX)}), 501
+        return jsonify({"error": str(eX)}), 501
 
-@app.route("/check_newcomer",methods=['POST'])
+
+@app.route("/check_newcomer", methods=["POST"])
 def check_newcomer():
     json = request.get_json()
-    if not json or 'id' not in json:
-        return jsonify({'error': 'Invalid!'}),400
-    
-    user = Users.query.filter_by(id=json['id']).first()
+    if not json or "id" not in json:
+        return jsonify({"error": "Invalid!"}), 400
+
+    user = Users.query.filter_by(id=json["id"]).first()
 
     if user:
-        return jsonify({'is_new_user': True}),200
+        return jsonify({"is_new_user": True}), 200
     else:
-        return jsonify({'is_new_user': False}),200
+        return jsonify({"is_new_user": False}), 200
+
 
 @app.route("/api/suggestion_routes", methods=["POST"])
 def get_routes():
@@ -337,7 +356,7 @@ def post():
     # embedding を適切な形式に変換
     embedding_vector = f"({','.join(map(str, embedding))})"
 
-    new_post = Post(
+    new_post = Posts(
         title=title,
         comment=comment,
         embedding=embedding_vector,
