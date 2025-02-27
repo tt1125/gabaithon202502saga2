@@ -8,6 +8,7 @@ services:
       ENV: ${ENV}
       DATABASE_URI: ${DATABASE_URI}
       TZ: Asia/Tokyo
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
     volumes:
       - ./app/back:/app/back
       - ./app/front/out:/app/front/out
