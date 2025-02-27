@@ -23,11 +23,11 @@ export default function Result({ setProgress }: ResultProps) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        title: title,
-        comment: comment,
-        created_by: user?.uid, // ここに適切なユーザーIDを設定
-        origin_lat: originLat, // originの緯度を設定
-        origin_lng: originLng, // originの経度を設定
+        title,
+        comment,
+        created_by: user?.uid, // ユーザーIDを使用
+        origin_lat: originLat,
+        origin_lng: originLng,
         point1_lat: point1.lat,
         point1_lng: point1.lng,
         point1_name: point1.name,
@@ -54,7 +54,7 @@ export default function Result({ setProgress }: ResultProps) {
 
   const routes = ["Aルート", "Bルート", "Cルート"];
   const selectedRoutes = JSON.parse(
-    localStorage.getItem("selectedRoute") || "{}",
+    localStorage.getItem("selectedRoute") || "{}"
   );
   console.log(selectedRoutes);
   const originLat = selectedRoutes.origin.lat;
