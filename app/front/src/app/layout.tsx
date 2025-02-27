@@ -5,6 +5,8 @@ import { LayoutProvider } from "@/context/LayoutContext";
 import { GoogleMapProvider } from "@/context/GoogleMapContext";
 import { AuthProvider } from "@/context/AuthContext";
 
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -30,11 +32,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <LayoutProvider>
-            <GoogleMapProvider>{children}</GoogleMapProvider>
-          </LayoutProvider>
-        </AuthProvider>
+        <AppRouterCacheProvider>
+          <AuthProvider>
+            <LayoutProvider>
+              <GoogleMapProvider>{children}</GoogleMapProvider>
+            </LayoutProvider>
+          </AuthProvider>
+        </AppRouterCacheProvider>
       </body>
     </html>
   );
