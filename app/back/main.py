@@ -37,29 +37,31 @@ class TestVector(db.Model):
 class Posts(db.Model):
     __tablename__ = "posts"
     id: Mapped[int] = mapped_column(db.Integer, primary_key=True, autoincrement=True)
-    title: Mapped[str] = mapped_column(db.String,nullable=True)
-    comment: Mapped[str] = mapped_column(db.String,nullable=True)
+    title: Mapped[str] = mapped_column(db.String,nullable=False)
+    comment: Mapped[str] = mapped_column(db.String,nullable=False)
     embedding: Mapped[Vector] = mapped_column(Vector(1536))
-    created_by: Mapped[str] = mapped_column(db.String,nullable=True)
-    created_at: Mapped[float] = mapped_column(db.Float,nullable=True)
-    origin_lat: Mapped[float] = mapped_column(db.Float,nullable=True)
-    origin_lng: Mapped[float] = mapped_column(db.Float,nullable=True)
-    origin_name: Mapped[str] = mapped_column(db.String,nullable=True)
-    point1_lat: Mapped[float] = mapped_column(db.Float,nullable=True)
-    point1_lng: Mapped[float] = mapped_column(db.Float,nullable=True)
-    point1_name: Mapped[str] = mapped_column(db.String,nullable=True)
-    point2_lat: Mapped[float] = mapped_column(db.Float,nullable=True)
-    point2_lng: Mapped[float] = mapped_column(db.Float,nullable=True)
-    point2_name: Mapped[str] = mapped_column(db.String,nullable=True)
-    point3_lat: Mapped[float] = mapped_column(db.Float,nullable=True)
-    point3_lng: Mapped[float] = mapped_column(db.Float,nullable=True)
-    point3_name: Mapped[str] = mapped_column(db.String,nullable=True)
+    created_by: Mapped[str] = mapped_column(db.String,nullable=False)
+    created_at: Mapped[float] = mapped_column(db.Float,nullable=False)
+    origin_lat: Mapped[float] = mapped_column(db.Float,nullable=False)
+    origin_lng: Mapped[float] = mapped_column(db.Float,nullable=False)
+    origin_name: Mapped[str] = mapped_column(db.String,nullable=False)
+    point1_lat: Mapped[float] = mapped_column(db.Float,nullable=False)
+    point1_lng: Mapped[float] = mapped_column(db.Float,nullable=False)
+    point1_name: Mapped[str] = mapped_column(db.String,nullable=False)
+    point2_lat: Mapped[float] = mapped_column(db.Float,nullable=False)
+    point2_lng: Mapped[float] = mapped_column(db.Float,nullable=False)
+    point2_name: Mapped[str] = mapped_column(db.String,nullable=False)
+    point3_lat: Mapped[float] = mapped_column(db.Float,nullable=False)
+    point3_lng: Mapped[float] = mapped_column(db.Float,nullable=False)
+    point3_name: Mapped[str] = mapped_column(db.String,nullable=False)
 
 class Users(db.Model):
     __tablename__ = "users"
     id: Mapped[str] = mapped_column(db.String, primary_key=True)
-    name: Mapped[str] = mapped_column(db.String,nullable=True)
-    img_url: Mapped[str] = mapped_column(db.String,nullable=True)
+    name: Mapped[str] = mapped_column(db.String,nullable=False)
+    img_url: Mapped[str] = mapped_column(db.String,nullable=False)
+    gender: Mapped[str] =  mapped_column(db.String,nullable=False)
+    age: Mapped[int] = mapped_column(db.Integer, nullable=False)
 
 
 @app.route("/")
@@ -77,9 +79,9 @@ def insert_userJSON():
 
     json = request.get_json()
 
-    if not json or 'id' not in json or 'img_url' not in json or 'name' not in json:
+    if not json or 'id' not in json or 'img_url' not in json or 'name' not in json or 'gender' not in json or 'age' not in json:
         return jsonify({'error': 'Invalid!'}), 400
-    new_user = Users(img_url=json['img_url'],name=json['name'])
+    new_user = Users(id=json['id'],img_url=json['img_url'],name=json['name'],gender=json['gender'],age=json['age'])
 
     try:
         db.session.add(new_user)
@@ -90,7 +92,7 @@ def insert_userJSON():
         return jsonify({'error': 'ID Conflict!'}),409
     except Exception as eX:
         db.session.rollback()
-        return jsonify({'error': str(eX)}), 500
+        return jsonify({'error': str(eX)}), 501
 
 @app.route("/check_newcomer",methods=['POST'])
 def check_newcomer():
