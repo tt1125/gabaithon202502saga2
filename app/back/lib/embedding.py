@@ -2,7 +2,6 @@ import os
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.embeddings import HuggingFaceEmbeddings
 
-
 def get_embedding(text: str, model: str = "openai", api_key: str = None):
     """
     指定した埋め込みモデルを使ってテキストをベクトル化する関数。
@@ -21,21 +20,16 @@ def get_embedding(text: str, model: str = "openai", api_key: str = None):
             os.environ["OPENAI_API_KEY"] = api_key
         embeddings = OpenAIEmbeddings()
     elif model == "huggingface":
-        embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
-        )
+        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
     else:
-        raise ValueError(
-            "モデル名は 'openai' または 'huggingface' のどちらかにしてください。"
-        )
+        raise ValueError("モデル名は 'openai' または 'huggingface' のどちらかにしてください。")
 
     return embeddings.embed_query(text)
-
 
 # テスト実行
 if __name__ == "__main__":
     text = "ITエンジニアについて30文字で教えて。"
-
+    
     # OpenAIを使う場合（APIキーが必要）
     api_key = ""
     print("OpenAI Embedding:")
