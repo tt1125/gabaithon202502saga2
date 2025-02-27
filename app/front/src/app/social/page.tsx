@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import FirstLogin from "../../components/FirstLogin";
+import { useState, useContext } from "react";
+import PostItem from "@/components/PostItem";
 import { AuthContext, useAuthContext } from "@/context/AuthContext";
 import {
   Avatar,
@@ -10,17 +10,100 @@ import {
   TextField,
   Typography,
   InputAdornment,
+  List,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import LogoutIcon from "@mui/icons-material/Logout";
 import DirectionsWalkIcon from "@mui/icons-material/DirectionsWalk";
-import { useContext } from "react";
 
 export default function Page() {
   const { logout } = useAuthContext();
   const loggedInUser = useContext(AuthContext);
   const userName = loggedInUser.user?.displayName;
   const userIconUrl = loggedInUser.user?.photoURL;
+
+  const testData = [
+    {
+      id: 1,
+      name: "1",
+      img_url: "",
+      title: "aaaa",
+      comment: "aaa",
+      create_at: "2023-11-26 00:00:00",
+    },
+    {
+      id: 1,
+      name: "2",
+      img_url: "",
+      title: "aaaa",
+      comment: "aaa",
+      create_at: "2023-11-26 00:00:00",
+    },
+    {
+      id: 1,
+      name: "3",
+      img_url: "",
+      title: "aaaa",
+      comment: "aaa",
+      create_at: "2023-11-26 00:00:00",
+    },
+    {
+      id: 1,
+      name: "4",
+      img_url: "",
+      title: "aaaa",
+      comment: "aaa",
+      create_at: "2023-11-26 00:00:00",
+    },
+    {
+      id: 1,
+      name: "5",
+      img_url: "",
+      title: "aaaa",
+      comment: "aaa",
+      create_at: "2023-11-26 00:00:00",
+    },
+    {
+      id: 1,
+      name: "6",
+      img_url: "",
+      title: "aaaa",
+      comment: "aaa",
+      create_at: "2023-11-26 00:00:00",
+    },
+    {
+      id: 1,
+      name: "7",
+      img_url: "",
+      title: "aaaa",
+      comment: "aaa",
+      create_at: "2023-11-26 00:00:00",
+    },
+    {
+      id: 1,
+      name: "8",
+      img_url: "",
+      title: "aaaa",
+      comment: "aaa",
+      create_at: "2023-11-26 00:00:00",
+    },
+    {
+      id: 1,
+      name: "9",
+      img_url: "",
+      title: "aaaa",
+      comment: "aaa",
+      create_at: "2023-11-26 00:00:00",
+    },
+    {
+      id: 1,
+      name: "10",
+      img_url: "",
+      title: "aaaa",
+      comment: "aaa",
+      create_at: "2023-11-26 00:00:00",
+    },
+  ];
 
   return (
     <main
@@ -30,7 +113,7 @@ export default function Page() {
       <Box
         sx={{
           width: "100%",
-          height: "100%",
+          height: "100vh",
           display: "flex",
           flexDirection: "column",
           backgroundColor: "white",
@@ -44,8 +127,11 @@ export default function Page() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            position: "relative",
             overflow: "hidden",
+            position: "fixed",
+            width: "100%",
+            top: 0,
+            zIndex: 1000,
           }}
         >
           <Box
@@ -92,6 +178,7 @@ export default function Page() {
             flexDirection: "column",
             alignItems: "center",
             flexGrow: 1,
+            marginTop: "160px", //ヘッダーの高さ分の余白を確保
           }}
         >
           {/* ユーザー情報 */}
@@ -136,7 +223,7 @@ export default function Page() {
             placeholder="検索"
             fullWidth
             sx={{
-              maxWidth: "600px",
+              maxWidth: "800px",
               width: "100%",
               mb: 4,
               "& .MuiOutlinedInput-root": {
@@ -159,6 +246,18 @@ export default function Page() {
           />
 
           {/* 検索結果を表示したい */}
+          <List
+            sx={{
+              width: "100%",
+              maxWidth: "90%",
+              mx: "auto",
+              mb: 4,
+            }}
+          >
+            {testData.map((postData, index) => (
+              <PostItem postData={postData} key={index} />
+            ))}
+          </List>
         </Box>
 
         {/* フッター */}
