@@ -116,7 +116,7 @@ export default function Page() {
       case 3:
         return <></>;
       case 4:
-        return <Result />;
+        return <Result setProgress={storedProgress} />;
     }
   }
 }
