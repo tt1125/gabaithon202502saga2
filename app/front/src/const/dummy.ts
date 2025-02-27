@@ -1,4 +1,4 @@
-const DUMMY_DATA = {
+export const DUMMY_DATA = {
   easy: {
     point1: {
       lat: 33.373914,

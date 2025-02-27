@@ -4,9 +4,11 @@ import { BsPersonWalking } from "react-icons/bs";
 import { useAuthContext } from "@/context/AuthContext";
 import { GoogleMap } from "@react-google-maps/api";
 
-export default function Select() {
-  const { login } = useAuthContext();
+type SelectProps = {
+  suggestedRoutes: SuggestedRoutes;
+};
 
+export default function Select({ suggestedRoutes }: SelectProps) {
   return (
     <div
       style={{
@@ -16,10 +18,7 @@ export default function Select() {
         zIndex: -1,
       }}
     >
-      {/* <GoogleMap
-        onLoad={handleMapLoad}
-        mapContainerStyle={containerStyle}
-        center={mapCenter} // 現在地を中心に設定
+      <GoogleMap
         zoom={18}
         options={{
           mapTypeControl: false,
@@ -27,7 +26,7 @@ export default function Select() {
           streetViewControl: false,
           fullscreenControl: false,
         }}
-      /> */}
+      />
     </div>
   );
 }
