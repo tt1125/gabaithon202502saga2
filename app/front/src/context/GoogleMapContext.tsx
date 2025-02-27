@@ -45,9 +45,9 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
   const [active, setActive] = useState(false);
 
   // --- 固定の目的地たち (文字列 or 座標でOK) ---
-  const point1 = { lat: 33.303841951880464, lng: 130.50917614974222 };
-  const point2 = { lat: 33.30616086795037, lng: 130.5102654362774 };
-  const point3 = { lat: 33.30581594904022, lng: 130.5145199784839 };
+  const point1 = { lat: 33.373914, lng: 130.206551 };
+  const point2 = { lat: 33.373578, lng: 130.208156 };
+  const point3 = { lat: 33.371796, lng: 130.20775 };
 
   // --- Google Maps 読み込み ---
   const { isLoaded } = useJsApiLoader({
@@ -337,10 +337,42 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
       (result, status) => {
         if (status === "OK") {
           route1RendererRef.current?.setDirections(result);
+
+          // point1に近づいたら、point1を削除し、point2へのルートを計算
+          const distanceToPoint1 =
+            google.maps.geometry.spherical.computeDistanceBetween(
+              new google.maps.LatLng(currentPos.lat, currentPos.lng),
+              new google.maps.LatLng(point1.lat, point1.lng)
+            );
+
+          if (distanceToPoint1 < 50) {
+            // 50メートル以内に近づいたら
+            route1RendererRef.current?.setMap(null); // point1へのルートを削除
+            calculateRouteToPoint2(currentPos); // point2へのルートを計算
+          }
         }
       }
     );
   }
+
+  function calculateRouteToPoint2(currentPos: Coordinates) {
+    if (!mapRef.current || !route2RendererRef.current) return;
+    const directionsService = new google.maps.DirectionsService();
+
+    directionsService.route(
+      {
+        origin: currentPos,
+        destination: point2,
+        travelMode: google.maps.TravelMode.WALKING,
+      },
+      (result, status) => {
+        if (status === "OK") {
+          route2RendererRef.current?.setDirections(result);
+        }
+      }
+    );
+  }
+
   useEffect(() => {
     if (!navigator.geolocation) {
       console.error("Geolocation not supported");
