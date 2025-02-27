@@ -22,12 +22,6 @@ export default function Page() {
   const userName = loggedInUser.user?.displayName;
   const userIconUrl = loggedInUser.user?.photoURL;
 
-  const [isPopupOpen, setIsPopupOpen] = useState(true);
-
-  const handleClosePopup = () => {
-    setIsPopupOpen(false);
-  };
-
   return (
     <main className="h-screen bg-gradient-to-r from-purple-500 to-indigo-600">
       <Box
@@ -160,20 +154,7 @@ export default function Page() {
           />
 
           {/* 検索結果を表示したい */}
-          {/* ここに検索結果のコンポーネントを追加 */}
-          <Button
-            onClick={() => {
-              setIsPopupOpen(true);
-            }}
-          >
-            ポップアップのテスト用ボタン
-          </Button>
         </Box>
-
-        <div>
-          {/* 他のコンポーネント */}
-          <FirstLogin open={isPopupOpen} onClose={handleClosePopup} />
-        </div>
 
         {/* フッター */}
         <Box sx={{ p: 2, textAlign: "center" }}>
