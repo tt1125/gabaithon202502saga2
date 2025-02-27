@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
+import { useGoogleMapContext } from "@/context/GoogleMapContext";
 
 /** =====================
  *  型定義
@@ -34,6 +35,7 @@ type SuggestedRoutes = {
 
 type Props = {
   suggestedRoutes: SuggestedRoutes;
+  storedProgress: (progress: number) => void;
 };
 
 type RouteType = "easy" | "normal" | "hard";
@@ -41,15 +43,14 @@ type RouteType = "easy" | "normal" | "hard";
 /** =====================
  *  コンポーネント
  *  ===================== */
-export default function MultiRoutesMap({ suggestedRoutes }: Props) {
+export default function MultiRoutesMap({
+  suggestedRoutes,
+  storedProgress,
+}: Props) {
   //
   // 1) Google Maps API 読み込み
   //
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: "AIzaSyCsWEFEzwVzLk6PTAWxhc-6WZzMzFKmamI", // ←必ず差し替えてください
-    libraries: ["geometry"],
-    language: "ja",
-  });
+  const { isLoaded } = useGoogleMapContext();
 
   //
   // 2) ルート選択
@@ -398,6 +399,22 @@ export default function MultiRoutesMap({ suggestedRoutes }: Props) {
 
   const [isStartHovered, setIsStartHovered] = useState(false);
 
+  const handleStart = () => {
+    const { point1, point2, point3 } = suggestedRoutes[selectedRoute];
+    const routeData = {
+      origin: {
+        lat: origin?.lat || 0,
+        lng: origin?.lng || 0,
+        name: "出発地点",
+      },
+      point1: { lat: point1.lat, lng: point1.lng, name: point1.name },
+      point2: { lat: point2.lat, lng: point2.lng, name: point2.name },
+      point3: { lat: point3.lat, lng: point3.lng, name: point3.name },
+    };
+    localStorage.setItem("selectedRoute", JSON.stringify(routeData));
+    storedProgress(3);
+  };
+
   return (
     <div style={{ width: "100%", height: "100vh", position: "relative" }}>
       {/* 地図表示判定 */}
@@ -462,7 +479,7 @@ export default function MultiRoutesMap({ suggestedRoutes }: Props) {
 
         {/* スタートボタン */}
         <motion.button
-          onClick={() => console.log("START")}
+          onClick={handleStart}
           onHoverStart={() => setIsStartHovered(true)}
           onHoverEnd={() => setIsStartHovered(false)}
           className="relative w-full px-8 py-4 rounded-lg font-bold text-white text-lg

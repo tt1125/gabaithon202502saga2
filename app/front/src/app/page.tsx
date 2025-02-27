@@ -23,6 +23,9 @@ export default function Page() {
     if (progress === 1) {
       const routes = getSuggestedRoute();
     }
+    if (progress === 3) {
+      setActive(true);
+    }
   }, [progress]);
 
   switch (progress) {
@@ -31,6 +34,10 @@ export default function Page() {
     case 1:
       return <Loading message="現在地からルートを生成しています" />;
     case 2:
-      return <Select suggestedRoutes={DUMMY_DATA} />;
+      return (
+        <Select suggestedRoutes={DUMMY_DATA} storedProgress={storedProgress} />
+      );
+    case 3:
+      return <></>;
   }
 }

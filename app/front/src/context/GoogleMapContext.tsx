@@ -51,17 +51,10 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
   const point2 = { lat: 33.373578, lng: 130.208156 };
   const point3 = { lat: 33.371796, lng: 130.20775 };
 
-  let isLoaded = false;
-
-  useEffect(() => {
-    if (active) {
-      console.log("GoogleMapProvider: active");
-      const { isLoaded } = useJsApiLoader({
-        googleMapsApiKey: "AIzaSyCsWEFEzwVzLk6PTAWxhc-6WZzMzFKmamI",
-        language: "ja",
-      });
-    }
-  }, [active]);
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: "AIzaSyCsWEFEzwVzLk6PTAWxhc-6WZzMzFKmamI",
+    language: "ja",
+  });
 
   // =====================
   // 位置情報を ref で保持
