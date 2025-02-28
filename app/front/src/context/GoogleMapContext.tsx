@@ -368,7 +368,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
     directionsService.route(
       {
         origin: currentPos,
-        destination: point1,
+        destination: { lat: point1.lat, lng: point1.lng },
         travelMode: google.maps.TravelMode.WALKING,
       },
       (result, status) => {

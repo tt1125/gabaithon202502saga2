@@ -56,7 +56,6 @@ export default function Result({ setProgress }: ResultProps) {
   const selectedRoutes = JSON.parse(
     localStorage.getItem("selectedRoute") || "{}"
   );
-  console.log(selectedRoutes);
   const originLat = selectedRoutes.origin.lat;
   const originLng = selectedRoutes.origin.lng;
   const point1 = selectedRoutes.point1;

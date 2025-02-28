@@ -61,7 +61,7 @@ export default function MultiRoutesMap({
   // 3) 現在地 (origin) を state で管理し、localStorage と同期
   //
   const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(
-    null,
+    null
   );
 
   //
@@ -117,7 +117,7 @@ export default function MultiRoutesMap({
       (err) => {
         console.error("Geolocation error:", err);
       },
-      { enableHighAccuracy: true },
+      { enableHighAccuracy: true }
     );
   }, [isLoaded, origin]);
 
@@ -167,7 +167,7 @@ export default function MultiRoutesMap({
   // =====================
   function calculateAllRoutes(
     routeKey: RouteType,
-    originPos: { lat: number; lng: number },
+    originPos: { lat: number; lng: number }
   ) {
     if (!mapRef.current) return;
     const directionsService = new google.maps.DirectionsService();
@@ -197,7 +197,7 @@ export default function MultiRoutesMap({
         } else {
           console.error("Blue route error:", status);
         }
-      },
+      }
     );
 
     // 2) A→B
@@ -213,7 +213,7 @@ export default function MultiRoutesMap({
         } else {
           console.error("Green route error:", status);
         }
-      },
+      }
     );
 
     // 3) B→C
@@ -229,7 +229,7 @@ export default function MultiRoutesMap({
         } else {
           console.error("Yellow route error:", status);
         }
-      },
+      }
     );
 
     // 4) C→origin
@@ -245,7 +245,7 @@ export default function MultiRoutesMap({
         } else {
           console.error("Red route error:", status);
         }
-      },
+      }
     );
 
     // A,B,C,D ピン
@@ -353,7 +353,7 @@ export default function MultiRoutesMap({
     originPos: { lat: number; lng: number },
     point1: Point,
     point2: Point,
-    point3: Point,
+    point3: Point
   ) {
     if (!mapRef.current) return;
     const bounds = new google.maps.LatLngBounds();
@@ -401,7 +401,6 @@ export default function MultiRoutesMap({
 
   const handleStart = async () => {
     const { point1, point2, point3 } = suggestedRoutes[selectedEase];
-    console.log("Selected Route:", point1, point2, point3);
     const routeData = {
       origin: {
         lat: origin?.lat || 0,
@@ -412,7 +411,6 @@ export default function MultiRoutesMap({
       point2: { lat: point2.lat, lng: point2.lng, name: point2.name },
       point3: { lat: point3.lat, lng: point3.lng, name: point3.name },
     };
-    console.log("Route Data:", routeData);
     localStorage.setItem("selectedRoute", "");
     localStorage.setItem("selectedRoute", JSON.stringify(routeData));
     localStorage.setItem("progress", JSON.stringify(1));
