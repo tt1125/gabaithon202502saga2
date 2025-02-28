@@ -9,6 +9,8 @@ import React, {
 } from "react";
 import { usePathname } from "next/navigation";
 import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
+import { useArrivalEffect } from "@/hooks/useArrivalEffect";
+import { ArrivalEffect } from "@/components/ArrivalEffect";
 
 // =====================
 // GoogleMapContext
@@ -176,7 +178,6 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
         },
       });
     }
-    // ... existing code ...
 
     map.addListener("click", (event: google.maps.MapMouseEvent) => {
       if (event.latLng) {
@@ -248,7 +249,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
               if (status === "OK") {
                 route4RendererRef.current?.setDirections(result);
               }
-            },
+            }
           );
         }
       }
@@ -324,7 +325,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
           if (status === "OK" && route4RendererRef.current) {
             route4RendererRef.current.setDirections(result);
           }
-        },
+        }
       );
     }
 
@@ -339,7 +340,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
         if (status === "OK" && route3RendererRef.current) {
           route3RendererRef.current.setDirections(result);
         }
-      },
+      }
     );
 
     // ②-1) point1 → point2
@@ -353,7 +354,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
         if (status === "OK" && route2RendererRef.current) {
           route2RendererRef.current.setDirections(result);
         }
-      },
+      }
     );
   }
 
@@ -378,12 +379,19 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
           const distanceToPoint1 =
             google.maps.geometry.spherical.computeDistanceBetween(
               new google.maps.LatLng(currentPos.lat, currentPos.lng),
-              new google.maps.LatLng(point1.lat, point1.lng),
+              new google.maps.LatLng(point1.lat, point1.lng)
             );
 
           if (distanceToPoint1 < 50) {
             // 50メートル以内に近づいたら
             route1RendererRef.current?.setMap(null); // point1へのルートを削除
+            if (localStorage.getItem("progress") == "1") {
+              const point1Name = JSON.parse(
+                localStorage.getItem("selectedRoute") || "{}"
+              ).point1.name;
+              setArrivalMessage(`「${point1Name}」に到達しました!!`);
+              play();
+            }
             localStorage.setItem("progress", "2");
           } else {
             // point1から離れたら再度point2へのルートを表示
@@ -392,7 +400,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
-      },
+      }
     );
   }
 
@@ -413,12 +421,19 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
           const distanceToPoint2 =
             google.maps.geometry.spherical.computeDistanceBetween(
               new google.maps.LatLng(currentPos.lat, currentPos.lng),
-              new google.maps.LatLng(point2.lat, point2.lng),
+              new google.maps.LatLng(point2.lat, point2.lng)
             );
 
           if (distanceToPoint2 < 50) {
             // 50メートル以内に近づいたら
             route2RendererRef.current?.setMap(null); // point2へのルートを削除
+            if (localStorage.getItem("progress") == "2") {
+              const point2Name = JSON.parse(
+                localStorage.getItem("selectedRoute") || "{}"
+              ).point2.name;
+              setArrivalMessage(`「${point2Name}」に到達しました!!`);
+              play();
+            }
             localStorage.setItem("progress", "3");
           } else {
             // point2から離れたら再度point3へのルートを表示
@@ -427,7 +442,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
-      },
+      }
     );
   }
 
@@ -448,12 +463,20 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
           const distanceToPoint3 =
             google.maps.geometry.spherical.computeDistanceBetween(
               new google.maps.LatLng(currentPos.lat, currentPos.lng),
-              new google.maps.LatLng(point3.lat, point3.lng),
+              new google.maps.LatLng(point3.lat, point3.lng)
             );
 
           if (distanceToPoint3 < 50) {
             // 50メートル以内に近づいたら
             route3RendererRef.current?.setMap(null); // point3へのルートを削除
+            if (localStorage.getItem("progress") == "3") {
+              localStorage.setItem("progress", "4");
+              const point3Name = JSON.parse(
+                localStorage.getItem("selectedRoute") || "{}"
+              ).point3.name;
+              setArrivalMessage(`「${point3Name}」に到達しました!!`);
+              play();
+            }
             localStorage.setItem("progress", "4");
           } else {
             // point3から離れたら再度初期位置へのルートを表示
@@ -462,7 +485,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }
-      },
+      }
     );
   }
 
@@ -492,18 +515,20 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
               new google.maps.LatLng(currentPos.lat, currentPos.lng),
               new google.maps.LatLng(
                 initialPositionRef.current.lat,
-                initialPositionRef.current.lng,
-              ),
+                initialPositionRef.current.lng
+              )
             );
 
           if (distanceToInitialPosition < 50) {
             // 50メートル以内に近づいたら
             route4RendererRef.current?.setMap(null); // 初期位置へのルートを削除
+            setArrivalMessage(`【目標達成】開始地点に到達しました!!`);
+            play();
             setActive(false);
             localStorage.setItem("progress", "5");
           }
         }
-      },
+      }
     );
   }
 
@@ -570,14 +595,14 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
               if (status === "OK") {
                 route4RendererRef.current?.setDirections(result);
               }
-            },
+            }
           );
         }
       },
       (err) => {
         console.error("Geolocation watchPosition error:", err);
       },
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 5000 },
+      { enableHighAccuracy: true, maximumAge: 2000, timeout: 5000 }
     );
 
     return () => {
@@ -606,7 +631,7 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
         (err) => {
           console.error("Geolocation getCurrentPosition error:", err);
         },
-        { enableHighAccuracy: true },
+        { enableHighAccuracy: true }
       );
     } else {
       console.error("Geolocation not supported");
@@ -616,6 +641,9 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
   // =====================
   // 描画 (一度だけ)
   // =====================
+
+  const { isPlaying, play, handleComplete } = useArrivalEffect();
+  const [arrivalMessage, setArrivalMessage] = useState("");
   return (
     <GoogleMapContext.Provider
       value={{
@@ -626,6 +654,9 @@ export function GoogleMapProvider({ children }: { children: React.ReactNode }) {
         currentLng: currentPointRef.current?.lng || 0,
       }}
     >
+      {isPlaying && (
+        <ArrivalEffect name={arrivalMessage} onComplete={handleComplete} />
+      )}
       {isLoaded && mapCenter && active && (
         <div
           style={{

@@ -6,6 +6,8 @@ import { Footprints, MapPin, Trophy, Check, Flame, Heart } from "lucide-react";
 import { TextField, Button, Paper } from "@mui/material";
 import { END_POINT } from "@/const/endpoint";
 import { useAuthContext } from "@/context/AuthContext";
+import { usePostEffect } from "@/hooks/usePostEffect";
+import { PostEffect } from "./PostEffect";
 
 type ResultProps = {
   setProgress: (progress: number) => void;
@@ -19,6 +21,8 @@ export default function Result({ setProgress }: ResultProps) {
   const { user } = useAuthContext();
 
   const handleSubmit = async () => {
+    play();
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     const response = await fetch(`${END_POINT}/api/posts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -39,7 +43,6 @@ export default function Result({ setProgress }: ResultProps) {
         point3_name: point3.name,
       }),
     });
-
     await response.json();
     localStorage.setItem("selectedRoute", "");
     localStorage.setItem("progress", "");
@@ -54,7 +57,7 @@ export default function Result({ setProgress }: ResultProps) {
 
   const routes = ["Aルート", "Bルート", "Cルート"];
   const selectedRoutes = JSON.parse(
-    localStorage.getItem("selectedRoute") || "{}",
+    localStorage.getItem("selectedRoute") || "{}"
   );
   const originLat = selectedRoutes.origin.lat;
   const originLng = selectedRoutes.origin.lng;
@@ -63,8 +66,11 @@ export default function Result({ setProgress }: ResultProps) {
   const point3 = selectedRoutes.point3;
   const routeNames = [point1.name, point2.name, point3.name];
 
+  const { isPlaying, play, handleComplete } = usePostEffect();
+
   return (
     <main className="h-screen w-full overflow-hidden">
+      {isPlaying && <PostEffect onComplete={handleComplete} />}
       <div className="w-full h-full flex flex-col shadow-2xl bg-white">
         {/* ヘッダー */}
         <div className="h-32 bg-gradient-to-r from-purple-500 to-indigo-600 flex items-center justify-center relative overflow-hidden">

@@ -5,6 +5,8 @@ import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { useGoogleMapContext } from "@/context/GoogleMapContext";
+import { StartEffect } from "./StartEffect";
+import { useStartEffect } from "@/hooks/useStartEffect";
 
 /** =====================
  *  型定義
@@ -61,7 +63,7 @@ export default function MultiRoutesMap({
   // 3) 現在地 (origin) を state で管理し、localStorage と同期
   //
   const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(
-    null,
+    null
   );
 
   //
@@ -117,7 +119,7 @@ export default function MultiRoutesMap({
       (err) => {
         console.error("Geolocation error:", err);
       },
-      { enableHighAccuracy: true },
+      { enableHighAccuracy: true }
     );
   }, [isLoaded, origin]);
 
@@ -167,7 +169,7 @@ export default function MultiRoutesMap({
   // =====================
   function calculateAllRoutes(
     routeKey: RouteType,
-    originPos: { lat: number; lng: number },
+    originPos: { lat: number; lng: number }
   ) {
     if (!mapRef.current) return;
     const directionsService = new google.maps.DirectionsService();
@@ -197,7 +199,7 @@ export default function MultiRoutesMap({
         } else {
           console.error("Blue route error:", status);
         }
-      },
+      }
     );
 
     // 2) A→B
@@ -213,7 +215,7 @@ export default function MultiRoutesMap({
         } else {
           console.error("Green route error:", status);
         }
-      },
+      }
     );
 
     // 3) B→C
@@ -229,7 +231,7 @@ export default function MultiRoutesMap({
         } else {
           console.error("Yellow route error:", status);
         }
-      },
+      }
     );
 
     // 4) C→origin
@@ -245,7 +247,7 @@ export default function MultiRoutesMap({
         } else {
           console.error("Red route error:", status);
         }
-      },
+      }
     );
 
     // A,B,C,D ピン
@@ -353,7 +355,7 @@ export default function MultiRoutesMap({
     originPos: { lat: number; lng: number },
     point1: Point,
     point2: Point,
-    point3: Point,
+    point3: Point
   ) {
     if (!mapRef.current) return;
     const bounds = new google.maps.LatLngBounds();
@@ -400,6 +402,8 @@ export default function MultiRoutesMap({
   const [isStartHovered, setIsStartHovered] = useState(false);
 
   const handleStart = async () => {
+    play();
+    await new Promise((resolve) => setTimeout(resolve, 3000)).then(() => {});
     const { point1, point2, point3 } = suggestedRoutes[selectedEase];
     const routeData = {
       origin: {
@@ -416,9 +420,12 @@ export default function MultiRoutesMap({
     localStorage.setItem("progress", JSON.stringify(1));
     storedProgress(3);
   };
+  const { isPlaying, play, handleComplete } = useStartEffect();
 
   return (
     <div style={{ width: "100%", height: "100vh", position: "relative" }}>
+      {isPlaying && <StartEffect onComplete={handleComplete} />}
+
       {/* 地図表示判定 */}
       {isLoaded ? (
         <GoogleMap
