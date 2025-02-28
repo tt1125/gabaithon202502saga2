@@ -43,10 +43,25 @@ export default function PostItem({ postData }: PostItemProps) {
             }}
           >
             <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
-              {postData.name}
+              {postData.name}　
+              <Typography variant="body2" component="span">
+                {postData.age}歳　
+                {postData.gender === "male"
+                  ? "男性"
+                  : postData.gender === "female"
+                    ? "女性"
+                    : "その他"}
+              </Typography>
             </Typography>
             <Typography variant="caption" sx={{ color: "text.secondary" }}>
-              {postData.created_at}
+              {new Date(postData.created_at).toLocaleString("ja-JP", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              })}
             </Typography>
           </Box>
           <Typography
