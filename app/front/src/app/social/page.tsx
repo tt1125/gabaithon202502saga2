@@ -50,24 +50,27 @@ export default function Page() {
   const userIconUrl = loggedInUser.user?.photoURL;
 
   // ------------------------------------------
-  // ① 投稿一覧、オフセット、ローディング状態 などの state を定義
+  // state 定義
   // ------------------------------------------
-  const [recentPosts, setRecentPosts] = useState<PostData[]>([]);
+  const [recentPosts, setRecentPosts] = useState<PostData[]>([]); // 最新投稿(無限スクロールで追加)
+  const [searchResults, setSearchResults] = useState<PostData[]>([]); // 検索結果用
   const [searchText, setSearchText] = useState("");
-  const [offset, setOffset] = useState(0); // 何件取得済みかを管理
-  const [isLoading, setIsLoading] = useState(false); // データ取得中のローディング表示切り替え
-  const [hasMore, setHasMore] = useState(true); // これ以上データがあるか？
 
-  // IntersectionObserver で監視する用の ref
+  const [offset, setOffset] = useState(0); // 無限スクロール用 何件取得済みか
+  const [isLoading, setIsLoading] = useState(false); // 無限スクロール用ローディング
+  const [hasMore, setHasMore] = useState(true); // まだデータがあるか？
+
+  const [isSearching, setIsSearching] = useState(false); // 検索処理中かどうか
+
+  // IntersectionObserver で監視する用の ref (無限スクロール)
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   // ------------------------------------------
-  // ② 追加データを取得する関数。offset に応じて10件単位で取得
+  // (A) 無限スクロール用: 追加データを取得する関数
   // ------------------------------------------
-  const fetchPosts = async (currentOffset: number) => {
+  const fetchRecentPosts = async (currentOffset: number) => {
     try {
       setIsLoading(true);
-
       const response = await fetch(`${END_POINT}/get_recent_posts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -77,40 +80,75 @@ export default function Page() {
       });
       const data = await response.json();
 
-      if (data.result && data.result.length > 0) {
-        // 取得したデータを既存のリストに追加
+      if (Array.isArray(data.result) && data.result.length > 0) {
         setRecentPosts((prev) => [...prev, ...data.result]);
       } else {
-        // これ以上取れるデータがなさそうなので、hasMore を false に
+        // これ以上データがない
         setHasMore(false);
       }
     } catch (error) {
-      console.error("データの取得に失敗しました:", error);
+      console.error("最新投稿の取得に失敗しました:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   // ------------------------------------------
-  // ③ offset が変更されたらデータ取得を走らせる
-  //    (初回マウント時もここに入るので offset=0 の fetch も行われる)
+  // (B) 検索用: 検索テキストを使って検索結果を取得
   // ------------------------------------------
-  useEffect(() => {
-    if (hasMore) {
-      fetchPosts(offset);
+  const fetchSearchResults = async (query: string) => {
+    setIsSearching(true);
+    try {
+      const response = await fetch(`${END_POINT}/api/search`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+      });
+      const data = await response.json();
+      // 検索結果をセット
+      setSearchResults(data);
+    } catch (error) {
+      console.error("検索に失敗しました:", error);
+    } finally {
+      setIsSearching(false);
     }
-  }, [offset, hasMore]);
+  };
 
   // ------------------------------------------
-  // ④ IntersectionObserver で bottomRef が画面内に入ったら
-  //    offset を +10 して追加データをトリガー
+  // (C) コンポーネントマウント時に offset=0 の最新投稿を取得
+  // ------------------------------------------
+  useEffect(() => {
+    fetchRecentPosts(0);
+  }, []);
+
+  // ------------------------------------------
+  // (D) offset が変化したら「さらに」最新投稿を取得
+  //     → 検索中じゃない時だけ
+  // ------------------------------------------
+  useEffect(() => {
+    // 検索文字が空 & まだデータがある場合のみ fetch
+    if (searchText.trim() === "" && hasMore && offset !== 0) {
+      fetchRecentPosts(offset);
+    }
+  }, [offset, searchText, hasMore]);
+
+  // ------------------------------------------
+  // (E) IntersectionObserver で bottomRef を監視し、
+  //     下までスクロールしたら offset += 10 して追加データを取得
+  //     → 検索時は無限スクロールを無効にする
   // ------------------------------------------
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        // 画面内に入った && ローディング中ではない && まだ追加データがあるなら
-        if (entries[0].isIntersecting && !isLoading && hasMore) {
-          setOffset((prevOffset) => prevOffset + 10);
+        // 画面内に入った && ローディング中ではない && まだ追加データがある && 検索中じゃない
+        if (
+          entries[0].isIntersecting &&
+          !isLoading &&
+          hasMore &&
+          !isSearching &&
+          searchText.trim() === ""
+        ) {
+          setOffset((prevOffset) => prevOffset + 8);
         }
       },
       {
@@ -124,13 +162,29 @@ export default function Page() {
       observer.observe(bottomRef.current);
     }
 
-    // コンポーネントがアンマウントされるときに監視を解除
     return () => {
       if (bottomRef.current) {
         observer.unobserve(bottomRef.current);
       }
     };
-  }, [isLoading, hasMore]);
+  }, [isLoading, hasMore, isSearching, searchText]);
+
+  // ------------------------------------------
+  // (F) 検索テキストが変化したら検索を実行
+  //     - 文字が空なら検索結果をリセット
+  //     - 文字が入っていれば検索実行
+  // ------------------------------------------
+  useEffect(() => {
+    if (searchText.trim() === "") {
+      // 検索文字が空になったら検索結果をクリア
+      setSearchResults([]);
+    } else {
+      fetchSearchResults(searchText.trim());
+    }
+  }, [searchText]);
+
+  // 表示する投稿一覧
+  const displayedPosts = searchText.trim() ? searchResults : recentPosts;
 
   return (
     <main
@@ -246,35 +300,43 @@ export default function Page() {
           </Box>
 
           {/* 検索バー */}
-          <TextField
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            variant="outlined"
-            placeholder="検索"
-            fullWidth
-            sx={{
-              px: 4,
-              maxWidth: "800px",
-              width: "100%",
-              mb: 4,
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "9999px",
-                "&:hover fieldset": {
-                  borderColor: "#9333ea",
+          <Box sx={{ width: "100%", maxWidth: "800px", mb: 4 }}>
+            <TextField
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              variant="outlined"
+              placeholder="検索"
+              fullWidth
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "9999px",
+                  "&:hover fieldset": {
+                    borderColor: "#9333ea",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#4f46e5",
+                  },
                 },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#4f46e5",
-                },
-              },
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon sx={{ color: "gray", mr: 1 }} />
-                </InputAdornment>
-              ),
-            }}
-          />
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: "gray", mr: 1 }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
+
+          {/* 検索ローディング表示 */}
+          {isSearching && (
+            <Box sx={{ mb: 2 }}>
+              <CircularProgress />
+              <Typography variant="body2" sx={{ ml: 2 }}>
+                検索中...
+              </Typography>
+            </Box>
+          )}
 
           {/* 投稿リスト */}
           <List
@@ -285,25 +347,23 @@ export default function Page() {
               mb: 4,
             }}
           >
-            {recentPosts.map((postData: PostData, index) => (
+            {displayedPosts.map((postData: PostData, index) => (
               <PostItem postData={postData} key={index} />
             ))}
           </List>
 
-          {/* ------------------------------------------
-              ⑤ ここにローディング・下部監視用の要素を設置
-                 isLoadingの場合はぐるぐるを表示
-              ------------------------------------------ */}
+          {/* 下部ローディング & 監視要素 */}
           <Box
             ref={bottomRef}
             sx={{
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
-              height: "50px", // 観測しやすいように適度な高さ
+              height: "50px",
             }}
           >
-            {isLoading && <CircularProgress />}
+            {/* 無限スクロール取得中で、かつ検索中ではないときだけ表示 */}
+            {isLoading && !isSearching && <CircularProgress />}
           </Box>
         </Box>
 

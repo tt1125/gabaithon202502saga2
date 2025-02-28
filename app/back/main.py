@@ -156,7 +156,7 @@ def get_recent_posts():
     if not json or "offset" not in json:
         return jsonify({"error": "Invalid!"}), 400
     offset = json["offset"]
-    posts = Posts.query.order_by(Posts.created_at.desc()).offset(offset).limit(10).all()
+    posts = Posts.query.order_by(Posts.created_at.desc()).offset(offset).limit(8).all()
     posts_list = []
 
     for post in posts:
@@ -488,7 +488,14 @@ def search_posts():
     vector_search_score = func.greatest(vector_search_score, 0)
     # 類似度スコアが高い順に３件取得
     stmt = (
-        select(Posts, vector_search_score, actual_distance.label("distance"))
+        select(
+            Posts,
+            Users.name,
+            Users.img_url,
+            vector_search_score,
+            actual_distance.label("distance"),
+        )
+        .join(Users, Posts.created_by == Users.id)  # UsersテーブルをPostsと結合
         .order_by(vector_search_score.desc())
         .limit(3)
     )
@@ -496,24 +503,27 @@ def search_posts():
     # 結果を整形してレスポンスに
     formatted_results = [
         {
-            "title": result.Post.title,
-            "comment": result.Post.comment,
-            "created_by": result.Post.created_by,
-            "created_at": result.Post.created_at,
-            "origin_lat": result.Post.origin_lat,
-            "origin_lng": result.Post.origin_lng,
-            "origin_name": result.Post.origin_name,
-            "point1_lat": result.Post.point1_lat,
-            "point1_lng": result.Post.point1_lng,
-            "point1_name": result.Post.point1_name,
-            "point2_lat": result.Post.point2_lat,
-            "point2_lng": result.Post.point2_lng,
-            "point2_name": result.Post.point2_name,
-            "point3_lat": result.Post.point3_lat,
-            "point3_lng": result.Post.point3_lng,
-            "point3_name": result.Post.point3_name,
-            "score": float(result[1]),
-            "distance": float(result[2]),
+            "id": result.Posts.id,
+            "title": result.Posts.title,
+            "comment": result.Posts.comment,
+            "created_by": result.Posts.created_by,
+            "created_at": result.Posts.created_at,
+            "name": result.name,  # Usersテーブルから取得したname
+            "img_url": result.img_url,  # Usersテーブルから取得したimg_url
+            "origin_lat": result.Posts.origin_lat,
+            "origin_lng": result.Posts.origin_lng,
+            "origin_name": result.Posts.origin_name,
+            "point1_lat": result.Posts.point1_lat,
+            "point1_lng": result.Posts.point1_lng,
+            "point1_name": result.Posts.point1_name,
+            "point2_lat": result.Posts.point2_lat,
+            "point2_lng": result.Posts.point2_lng,
+            "point2_name": result.Posts.point2_name,
+            "point3_lat": result.Posts.point3_lat,
+            "point3_lng": result.Posts.point3_lng,
+            "point3_name": result.Posts.point3_name,
+            "score": float(result[3]),
+            "distance": float(result[4]),
         }
         for result in results
     ]

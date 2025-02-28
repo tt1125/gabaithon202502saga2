@@ -7,6 +7,7 @@ type PostItemProps = {
 };
 
 export default function PostItem({ postData }: PostItemProps) {
+  console.log("PostItem", postData);
   return (
     <Paper
       elevation={1}
