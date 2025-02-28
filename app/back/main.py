@@ -251,29 +251,35 @@ def post_comment():
 
     return jsonify({"result": posts_list}), 200
 
-
 @app.route("/get_comment", methods=["POST"])
-def get_commnet():
+def get_comment():
     json = request.get_json()
     if not json or "post_id" not in json:
         return jsonify({"error": "Invalid!"}), 400
+
     comments = (
-        Comments.query.filter_by(post_id=json["post_id"])
+        db.session.query(Comments, Users.name, Users.img_url)  # Users の name, img_url を取得
+        .join(Users, Comments.user_id == Users.id)  # Users テーブルと JOIN
+        .filter(Comments.post_id == json["post_id"])
         .order_by(Comments.created_at.desc())
         .all()
     )
+
     comments_list = []
-    for comment in comments:
+    for comment, user_name, user_img_url in comments:
         comments_list.append(
             {
                 "comment": comment.comment,
                 "user_id": comment.user_id,
+                "user_name": user_name,  # 追加
+                "user_img_url": user_img_url,  # 追加
                 "created_at": comment.created_at,
                 "thread_id": comment.thread_id,
             }
         )
-    comments_list = np.array(comments_list).tolist()
+
     return jsonify({"result": comments_list}), 200
+
 
 
 @app.route("/api/suggestion_routes", methods=["POST"])
