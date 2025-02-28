@@ -330,14 +330,21 @@ export default function Page() {
 
           {/* 検索ローディング表示 */}
           {isSearching && (
-            <Box sx={{ mb: 2 }}>
-              <CircularProgress />
-              <Typography variant="body2" sx={{ ml: 2 }}>
-                検索中...
+            <Box
+              sx={{
+                mb: 2,
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <CircularProgress color="secondary" />
+              <Typography variant="body2" sx={{ mt: 3 }}>
+                検索中
               </Typography>
             </Box>
           )}
-
           {/* 投稿リスト */}
           <List
             sx={{
@@ -363,7 +370,9 @@ export default function Page() {
             }}
           >
             {/* 無限スクロール取得中で、かつ検索中ではないときだけ表示 */}
-            {isLoading && !isSearching && <CircularProgress />}
+            {isLoading && !isSearching && (
+              <CircularProgress color="secondary" />
+            )}
           </Box>
         </Box>
 
