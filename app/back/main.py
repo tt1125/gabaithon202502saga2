@@ -5,6 +5,7 @@ from flask import (
     send_from_directory,
     request,
     jsonify,
+    redirect,
 )
 from flask_cors import CORS
 import os
@@ -98,6 +99,11 @@ class Comments(db.Model):
 @app.route("/")
 def index():
     return send_from_directory("../front/out", "index.html")
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return redirect("/")
 
 
 @app.route("/user", methods=["POST"])
