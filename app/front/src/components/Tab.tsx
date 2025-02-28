@@ -15,8 +15,6 @@ export function Tab() {
   const router = useRouter();
   const currentPath = usePathname();
 
-  console.log(currentPath);
-
   const tabs: TabItem[] = [
     {
       icon: <Home className="h-5 w-5" />,
@@ -39,8 +37,8 @@ export function Tab() {
           className={cn(
             "flex flex-col w-full items-center justify-center gap-0.5 text-sm transition-colors",
             currentPath === tab.path
-              ? "text-black"
-              : "text-gray-400 hover:text-black",
+              ? "text-purple-600"
+              : "text-gray-400 hover:text-purple-500",
           )}
           aria-selected={currentPath === tab.path}
           role="tab"

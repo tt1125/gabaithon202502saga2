@@ -16,6 +16,7 @@ import {
   User,
 } from "firebase/auth";
 import Login from "@/components/Login";
+import Loading from "@/components/Loading";
 
 type AuthContextType = {
   user: User | null | undefined;
@@ -52,7 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async () => {
     const result = await signInWithPopup(auth, provider);
     setUser(result.user);
-    console.log("userData", result.user);
   };
 
   const logout = async () => {
@@ -66,7 +66,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
-      {user ? children : user === null ? <Login /> : <div>loading...</div>}
+      {user ? (
+        children
+      ) : user === null ? (
+        <Login />
+      ) : (
+        <Loading message="認証中" />
+      )}
     </AuthContext.Provider>
   );
 }

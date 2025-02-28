@@ -7,6 +7,7 @@ services:
     environment:
       ENV: ${ENV}
       DATABASE_URI: ${DATABASE_URI}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
       TZ: Asia/Tokyo
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     volumes:

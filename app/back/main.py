@@ -1,25 +1,45 @@
-from flask import Flask, send_from_directory
+from flask import (
+    Flask,
+    jsonify,
+    request,
+    send_from_directory,
+    request,
+    jsonify,
+    redirect,
+)
 from flask_cors import CORS
 import os
+import requests
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import Mapped, mapped_column
+from dotenv import load_dotenv
+
+from lib.places import get_place_name
+from lib.embedding import get_embedding
+
+load_dotenv()
+
+
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import select
 from sqlalchemy.sql import func
-from flask import request, jsonify
-from lib.embedding import get_embedding
-from sqlalchemy import TIMESTAMP
 
-# from lib.hello_world import hello_world
+from flask import request, jsonify  # よく分からんけど，ちょっと追加してみた．
+from sqlalchemy.exc import IntegrityError
+from datetime import datetime
+import numpy as np
+import datetime
+from datetime import datetime, timezone, timedelta
 
 app = Flask(__name__, static_folder="../front/out", static_url_path="")
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
-
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
+
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
 
 class Test(db.Model):
@@ -30,160 +50,489 @@ class Test(db.Model):
 
 class TestVector(db.Model):
     __tablename__ = "test_vector"
-    id: Mapped[str] = mapped_column(db.String, primary_key=True)
+    id: Mapped[int] = mapped_column(db.Integer, primary_key=True, autoincrement=True)
     content: Mapped[str] = mapped_column(db.String, nullable=False)
     embedding: Mapped[Vector] = mapped_column(Vector(10))
 
-# postsテーブルの定義
-class Post(db.Model):
-    __tablename__ = "posts"
 
-    id: Mapped[int] = mapped_column(db.Integer, primary_key=True, autoincrement=True)  # 自動生成
+class Posts(db.Model):
+    __tablename__ = "posts"
+    id: Mapped[int] = mapped_column(db.Integer, primary_key=True, autoincrement=True)
     title: Mapped[str] = mapped_column(db.String, nullable=False)
     comment: Mapped[str] = mapped_column(db.String, nullable=False)
-    embedding: Mapped[list] = mapped_column(Vector(1536), nullable=False)  # 1536次元のベクトル
+    embedding: Mapped[Vector] = mapped_column(Vector(1536))
     created_by: Mapped[str] = mapped_column(db.String, nullable=False)
-    created_at: Mapped[float] = mapped_column(TIMESTAMP, nullable=False)
-    origin_lat: Mapped[float] = mapped_column(db.Double, nullable=False)
-    origin_lng: Mapped[float] = mapped_column(db.Double, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(db.DateTime, nullable=False)
+    origin_lat: Mapped[float] = mapped_column(db.Float, nullable=False)
+    origin_lng: Mapped[float] = mapped_column(db.Float, nullable=False)
     origin_name: Mapped[str] = mapped_column(db.String, nullable=False)
-    point1_lat: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point1_lng: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point1_name: Mapped[str] = mapped_column(db.String, nullable=True)
-    point2_lat: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point2_lng: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point2_name: Mapped[str] = mapped_column(db.String, nullable=True)
-    point3_lat: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point3_lng: Mapped[float] = mapped_column(db.Double, nullable=True)
-    point3_name: Mapped[str] = mapped_column(db.String, nullable=True)
+    point1_lat: Mapped[float] = mapped_column(db.Float, nullable=False)
+    point1_lng: Mapped[float] = mapped_column(db.Float, nullable=False)
+    point1_name: Mapped[str] = mapped_column(db.String, nullable=False)
+    point2_lat: Mapped[float] = mapped_column(db.Float, nullable=False)
+    point2_lng: Mapped[float] = mapped_column(db.Float, nullable=False)
+    point2_name: Mapped[str] = mapped_column(db.String, nullable=False)
+    point3_lat: Mapped[float] = mapped_column(db.Float, nullable=False)
+    point3_lng: Mapped[float] = mapped_column(db.Float, nullable=False)
+    point3_name: Mapped[str] = mapped_column(db.String, nullable=False)
+
+
+class Users(db.Model):
+    __tablename__ = "users"
+    id: Mapped[str] = mapped_column(db.String, primary_key=True)
+    name: Mapped[str] = mapped_column(db.String, nullable=False)
+    img_url: Mapped[str] = mapped_column(db.String, nullable=False)
+    gender: Mapped[str] = mapped_column(db.String, nullable=False)
+    age: Mapped[int] = mapped_column(db.Integer, nullable=False)
+
+
+class Comments(db.Model):
+    __tablename__ = "comments"
+    id: Mapped[int] = mapped_column(db.Integer, primary_key=True, autoincrement=True)
+    post_id: Mapped[int] = mapped_column(db.Integer, nullable=False)
+    thread_id: Mapped[int] = mapped_column(db.Integer, nullable=False)
+    comment: Mapped[str] = mapped_column(db.String, nullable=False)
+    user_id: Mapped[str] = mapped_column(db.String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(db.DateTime, nullable=False)
+
 
 @app.route("/")
 def index():
     return send_from_directory("../front/out", "index.html")
 
 
-@app.route("/test")
-def test():
-    record = Test.query.get(1)
-    return {"id": record.id, "message": record.message}, 200
+@app.errorhandler(404)
+def not_found(e):
+    return redirect("/")
 
 
-# @app.route("/hello_world")
-# def hello_world_test():
-#     return hello_world()
+@app.route("/user", methods=["POST"])
+def insert_userJSON():
+
+    json = request.get_json()
+    print("Received JSON:", json)  # デバッグ用
+
+    if (
+        not json
+        or "id" not in json
+        or "img_url" not in json
+        or "name" not in json
+        or "gender" not in json
+        or "age" not in json
+    ):
+        return jsonify({"error": "Invalid!"}), 400
+    new_user = Users(
+        id=json["id"],
+        img_url=json["img_url"],
+        name=json["name"],
+        gender=json["gender"],
+        age=json["age"],
+    )
+
+    try:
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({"message": "Add success!"}), 201
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({"error": "ID Conflict!"}), 409
+    except Exception as eX:
+        db.session.rollback()
+        return jsonify({"error": str(eX)}), 501
+
+
+@app.route("/check_newcomer", methods=["POST"])
+def check_newcomer():
+    json = request.get_json()
+    if not json or "id" not in json:
+        return jsonify({"error": "Invalid!"}), 400
+
+    user = Users.query.filter_by(id=json["id"]).first()
+
+    if user:
+        return jsonify({"is_new_user": True}), 200
+    else:
+        return jsonify({"is_new_user": False}), 200
+
+
+@app.route("/get_recent_posts", methods=["POST"])
+def get_recent_posts():
+    json = request.get_json()
+
+    if not json or "offset" not in json:
+        return jsonify({"error": "Invalid!"}), 400
+    offset = json["offset"]
+    posts = Posts.query.order_by(Posts.created_at.desc()).offset(offset).limit(8).all()
+    posts_list = []
+
+    for post in posts:
+        post_user = Users.query.filter_by(id=post.created_by).first()
+        if post_user is None:
+            continue  # ユーザーが見つからない場合はスキップ
+
+        posts_list.append(
+            {
+                "id": post.id,
+                "title": post.title,
+                "comment": post.comment,
+                "created_by": post.created_by,
+                "created_at": post.created_at,
+                "name": post_user.name,
+                "img_url": post_user.img_url,
+                "gender": post_user.gender,
+                "age": post_user.age,
+                "origin_lat": post.origin_lat,
+                "origin_lng": post.origin_lng,
+                "origin_name": post.origin_name,
+                "point1_lat": post.point1_lat,
+                "point1_lng": post.point1_lng,
+                "point1_name": post.point1_name,
+                "point2_lat": post.point2_lat,
+                "point2_lng": post.point2_lng,
+                "point2_name": post.point2_name,
+                "point3_lat": post.point3_lat,
+                "point3_lng": post.point3_lng,
+                "point3_name": post.point3_name,
+            }
+        )
+
+        posts_list = np.array(posts_list).tolist()
+
+    return jsonify({"result": posts_list}), 200
+
+
+@app.route("/post_comment", methods=["POST"])
+def post_comment():
+    json = request.get_json()
+
+    if (
+        not json
+        or "post_id" not in json
+        or "user_id" not in json
+        or "comment" not in json
+    ):
+        return jsonify({"error": "Invalid!"}), 400
+
+    searchNum = 0
+    while True:
+        # スレッド順にコメントを探索する．
+        tmp = Comments.query.filter_by(
+            thread_id=searchNum, post_id=json["post_id"]
+        ).first()
+        if not tmp:
+            break
+        else:
+            searchNum += 1
+
+    # 日本標準時 (JST) のタイムゾーンを定義
+    jst_timezone = timezone(timedelta(hours=9))
+
+    # 現在の日本時間を取得
+    current_jst_time = datetime.now(jst_timezone)
+
+    new_comment = Comments(
+        created_at=current_jst_time,
+        thread_id=searchNum,
+        post_id=json["post_id"],
+        user_id=json["user_id"],
+        comment=json["comment"],
+    )
+
+    try:
+        db.session.add(new_comment)
+        db.session.commit()
+        return jsonify({"message": "Add success!"}), 201
+    except IntegrityError:  # IDは自動で割り振られるから，衝突するわけない．
+        db.session.rollback()
+        return jsonify({"error": "ID Conflict!"}), 409
+    except Exception as eX:
+        db.session.rollback()
+        return jsonify({"error": str(eX)}), 501
+
+    return jsonify({"result": posts_list}), 200
+
+
+@app.route("/get_comment", methods=["POST"])
+def get_commnet():
+    json = request.get_json()
+    if not json or "post_id" not in json:
+        return jsonify({"error": "Invalid!"}), 400
+    comments = (
+        Comments.query.filter_by(post_id=json["post_id"])
+        .order_by(Comments.created_at.desc())
+        .all()
+    )
+    comments_list = []
+    for comment in comments:
+        comments_list.append(
+            {
+                "comment": comment.comment,
+                "user_id": comment.user_id,
+                "created_at": comment.created_at,
+                "thread_id": comment.thread_id,
+            }
+        )
+    comments_list = np.array(comments_list).tolist()
+    return jsonify({"result": comments_list}), 200
+
+
+@app.route("/api/suggestion_routes", methods=["POST"])
+def get_routes():
+    data = request.get_json()
+    if (
+        not data
+        or "current_location_lat" not in data
+        or "current_location_lng" not in data
+    ):
+        return (
+            jsonify(
+                {
+                    "error": "Invalid request, provide current_location_lat and current_location_lng."
+                }
+            ),
+            400,
+        )
+
+    current_location_lat, current_location_lng = (
+        data["current_location_lat"],
+        data["current_location_lng"],
+    )
+
+    # 各モードの検索範囲 (半径)
+    modes = {
+        "easy mode": 200,
+        "normal mode": 450,
+        "hard mode": 1000,
+    }
+
+    def find_extreme_points(current_location_lat, current_location_lng, radius):
+        """指定の範囲内で、東西南北方向の最も遠い3地点を取得する"""
+        url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+        params = {
+            "location": f"{current_location_lat},{current_location_lng}",
+            "radius": radius,
+            "key": GOOGLE_MAPS_API_KEY,
+        }
+        response = requests.get(url, params=params)
+        results = response.json().get("results", [])
+
+        print(f"取得した地点数: {len(results)}")
+
+        if len(results) < 4:
+            print("十分な地点が取得できませんでした")
+            return []
+
+        # 除外対象の types (市町村などの行政区分)
+        exclude_types = {
+            "locality",
+            "sublocality",
+            "administrative_area_level_1",
+            "administrative_area_level_2",
+            "administrative_area_level_3",
+        }
+
+        # 東西南北方向の最も遠い4地点を探す
+        directions = {"north": None, "south": None, "east": None, "west": None}
+
+        for place in results:
+            place_lat = place["geometry"]["location"]["lat"]
+            place_lng = place["geometry"]["location"]["lng"]
+            name = place.get("name", "Unknown")
+            place_types = set(place.get("types", []))
+
+            # 市や町などの行政区分を除外
+            if place_types & exclude_types:
+                print(f"除外: {name} ({place_types})")
+                continue
+
+            if place_lat > current_location_lat and (
+                not directions["north"] or place_lat > directions["north"]["lat"]
+            ):
+                directions["north"] = {"lat": place_lat, "lng": place_lng, "name": name}
+            if place_lat < current_location_lat and (
+                not directions["south"] or place_lat < directions["south"]["lat"]
+            ):
+                directions["south"] = {"lat": place_lat, "lng": place_lng, "name": name}
+            if place_lng > current_location_lng and (
+                not directions["east"] or place_lng > directions["east"]["lng"]
+            ):
+                directions["east"] = {"lat": place_lat, "lng": place_lng, "name": name}
+            if place_lng < current_location_lng and (
+                not directions["west"] or place_lng < directions["west"]["lng"]
+            ):
+                directions["west"] = {"lat": place_lat, "lng": place_lng, "name": name}
+
+        # 4方向の中から最も遠い3地点を選択
+        valid_points = [p for p in directions.values() if p is not None]
+
+        if len(valid_points) < 3:
+            additional_points = sorted(
+                results,
+                key=lambda p: (
+                    (p["geometry"]["location"]["lat"] - current_location_lat) ** 2
+                    + (p["geometry"]["location"]["lng"] - current_location_lng) ** 2
+                ),
+                reverse=True,
+            )
+
+            # 行政区分を含むものをフィルタリング
+            additional_points = [
+                {
+                    "lat": p["geometry"]["location"]["lat"],
+                    "lng": p["geometry"]["location"]["lng"],
+                    "name": p["name"],
+                }
+                for p in additional_points
+                if not (set(p.get("types", [])) & exclude_types)
+            ]
+
+            return additional_points[:3]
+
+        valid_points.sort(
+            key=lambda p: (
+                (p["lat"] - current_location_lat) ** 2
+                + (p["lng"] - current_location_lng) ** 2
+            ),
+            reverse=True,
+        )
+
+        return valid_points[:3]
+
+    routes = []
+    for mode, radius in modes.items():
+        points = find_extreme_points(current_location_lat, current_location_lng, radius)
+        print(f"{mode}: {points}", "========")
+        if len(points) == 3:
+            routes.append(
+                {
+                    "mode": mode,
+                    "point1": points[0],
+                    "point2": points[1],
+                    "point3": points[2],
+                }
+            )
+
+    return jsonify(routes)
 
 
 @app.route("/api/posts", methods=["POST"])
 def create_post():
-    """新しい投稿をデータベースに格納するエンドポイント"""
+    try:
+        """新しい投稿をデータベースに格納するエンドポイント"""
+        # JSON データを取得
+        print("Request JSON:", request.get_json())
+        data = request.get_json()
+        # 必須フィールドのバリデーション
+        # :画鋲: エンべディング用のテキストを作成
+        origin_name = get_place_name(data["origin_lat"], data["origin_lng"])
+        print(f"Origin: {origin_name}", "😀")
+        embedding_text = f"""
+        Title: {data['title']}
+        Comment: {data['comment']}
+        Origin: {origin_name}
+        Stops: {', '.join(filter(None, [
+            data.get('point1_name'),
+            data.get('point2_name'),
+            data.get('point3_name')
+        ]))}
+        """.strip()
+        # :画鋲: エンべディングを取得
+        embedding_vector = get_embedding(embedding_text)
+        # 新しい `Post` インスタンスを作成
 
-    # JSON データを取得
-    data = request.get_json()
+        jst_timezone = timezone(timedelta(hours=9))
 
-    # 必須フィールドのバリデーション
-    required_fields = [
-        "title", "comment", "created_by", "created_at",
-        "origin_lat", "origin_lng", "origin_name"
-    ]
-    for field in required_fields:
-        if field not in data:
-            return jsonify({"error": f"Missing required field: {field}"}), 400
+        # 現在の日本時間を取得
+        current_jst_time = datetime.now(jst_timezone)
+        new_post = Posts(
+            title=data["title"],
+            comment=data["comment"],
+            embedding=embedding_vector,  # ここにエンべディングを格納
+            created_by=data["created_by"],
+            created_at=current_jst_time,
+            origin_lat=data["origin_lat"],
+            origin_lng=data["origin_lng"],
+            origin_name=origin_name,
+            point1_lat=data.get("point1_lat"),
+            point1_lng=data.get("point1_lng"),
+            point1_name=data.get("point1_name"),
+            point2_lat=data.get("point2_lat"),
+            point2_lng=data.get("point2_lng"),
+            point2_name=data.get("point2_name"),
+            point3_lat=data.get("point3_lat"),
+            point3_lng=data.get("point3_lng"),
+            point3_name=data.get("point3_name"),
+        )
+        # データベースに保存
+        db.session.add(new_post)
+        db.session.commit()
+        return jsonify({"message": "Post created successfully", "id": new_post.id}), 201
+    except Exception as e:
+        import traceback
 
-    # 📌 エンべディング用のテキストを作成
-    embedding_text = f"""
-    Title: {data['title']}
-    Comment: {data['comment']}
-    Origin: {data['origin_name']}
-    Stops: {', '.join(filter(None, [
-        data.get('point1_name'),
-        data.get('point2_name'),
-        data.get('point3_name')
-    ]))}
-    """.strip()
+        error_message = traceback.format_exc()
+        print(error_message)
+        return jsonify({"error": str(e)}), 500
 
-    # 📌 エンべディングを取得
-    embedding_vector = get_embedding(embedding_text)
-
-    # 新しい `Post` インスタンスを作成
-    new_post = Post(
-        title=data["title"],
-        comment=data["comment"],
-        embedding=embedding_vector,  # ここにエンべディングを格納
-        created_by=data["created_by"],
-        created_at=data["created_at"],
-        origin_lat=data["origin_lat"],
-        origin_lng=data["origin_lng"],
-        origin_name=data["origin_name"],
-        point1_lat=data.get("point1_lat"),
-        point1_lng=data.get("point1_lng"),
-        point1_name=data.get("point1_name"),
-        point2_lat=data.get("point2_lat"),
-        point2_lng=data.get("point2_lng"),
-        point2_name=data.get("point2_name"),
-        point3_lat=data.get("point3_lat"),
-        point3_lng=data.get("point3_lng"),
-        point3_name=data.get("point3_name"),
-    )
-
-    # データベースに保存
-    db.session.add(new_post)
-    db.session.commit()
-
-    return jsonify({"message": "Post created successfully", "id": new_post.id}), 201
 
 @app.route("/api/search", methods=["POST"])
 def search_posts():
     data = request.get_json()
     if not data or "query" not in data:
         return jsonify({"error": "Missing query parameter"}), 400
-
     # ユーザー入力テキストをエンべディング化
     query_text = data["query"]
     query_embedding = get_embedding(query_text)
-
     # 検索時のパラメータ（max_distance はスケール調整用）
     max_distance = 100
-
     # Post.embedding は Vector(1536) 型なので、get_embedding() で取得したベクトルと L2 距離を計算
-    actual_distance = Post.embedding.l2_distance(query_embedding)
-
+    actual_distance = Posts.embedding.l2_distance(query_embedding)
     # スコア = 1 - (distance / max_distance) を計算し、負の場合は 0 とする
-    vector_search_score = (1 - actual_distance / max_distance).label("vector_search_score")
+    vector_search_score = (1 - actual_distance / max_distance).label(
+        "vector_search_score"
+    )
     vector_search_score = func.greatest(vector_search_score, 0)
-
     # 類似度スコアが高い順に３件取得
     stmt = (
-        select(Post, vector_search_score, actual_distance.label("distance"))
+        select(
+            Posts,
+            Users.name,
+            Users.img_url,
+            vector_search_score,
+            actual_distance.label("distance"),
+        )
+        .join(Users, Posts.created_by == Users.id)  # UsersテーブルをPostsと結合
         .order_by(vector_search_score.desc())
         .limit(3)
     )
     results = db.session.execute(stmt).all()
-
     # 結果を整形してレスポンスに
     formatted_results = [
         {
-            "title": result.Post.title,
-            "comment": result.Post.comment,
-            "created_by": result.Post.created_by,
-            "created_at": result.Post.created_at,
-            "origin_lat": result.Post.origin_lat,
-            "origin_lng": result.Post.origin_lng,
-            "origin_name": result.Post.origin_name,
-            "point1_lat": result.Post.point1_lat,
-            "point1_lng": result.Post.point1_lng,
-            "point1_name": result.Post.point1_name,
-            "point2_lat": result.Post.point2_lat,
-            "point2_lng": result.Post.point2_lng,
-            "point2_name": result.Post.point2_name,
-            "point3_lat": result.Post.point3_lat,
-            "point3_lng": result.Post.point3_lng,
-            "point3_name": result.Post.point3_name,
-            "score": float(result[1]),
-            "distance": float(result[2]),
+            "id": result.Posts.id,
+            "title": result.Posts.title,
+            "comment": result.Posts.comment,
+            "created_by": result.Posts.created_by,
+            "created_at": result.Posts.created_at,
+            "name": result.name,  # Usersテーブルから取得したname
+            "img_url": result.img_url,  # Usersテーブルから取得したimg_url
+            "origin_lat": result.Posts.origin_lat,
+            "origin_lng": result.Posts.origin_lng,
+            "origin_name": result.Posts.origin_name,
+            "point1_lat": result.Posts.point1_lat,
+            "point1_lng": result.Posts.point1_lng,
+            "point1_name": result.Posts.point1_name,
+            "point2_lat": result.Posts.point2_lat,
+            "point2_lng": result.Posts.point2_lng,
+            "point2_name": result.Posts.point2_name,
+            "point3_lat": result.Posts.point3_lat,
+            "point3_lng": result.Posts.point3_lng,
+            "point3_name": result.Posts.point3_name,
+            "score": float(result[3]),
+            "distance": float(result[4]),
         }
         for result in results
     ]
-
     return jsonify(formatted_results), 200
 
 
