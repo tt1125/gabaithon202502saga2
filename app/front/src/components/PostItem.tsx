@@ -7,13 +7,9 @@ import { Avatar, Box, Typography, Paper } from "@mui/material";
 import { Flag, Home, MapPin, Navigation } from "lucide-react";
 
 import {
-  Avatar,
-  Box,
   Button,
   TextField,
-  Typography,
   CircularProgress, // ぐるぐるのローディング用
-  Paper,
 } from "@mui/material";
 
 interface PostItemProps {
