@@ -38,7 +38,7 @@ export function Tab() {
             "flex flex-col w-full items-center justify-center gap-0.5 text-sm transition-colors",
             currentPath === tab.path
               ? "text-purple-600"
-              : "text-gray-400 hover:text-purple-500"
+              : "text-gray-400 hover:text-purple-500",
           )}
           aria-selected={currentPath === tab.path}
           role="tab"
