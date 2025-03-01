@@ -63,7 +63,7 @@ export default function MultiRoutesMap({
   // 3) 現在地 (origin) を state で管理し、localStorage と同期
   //
   const [origin, setOrigin] = useState<{ lat: number; lng: number } | null>(
-    null
+    null,
   );
 
   //
@@ -119,7 +119,7 @@ export default function MultiRoutesMap({
       (err) => {
         console.error("Geolocation error:", err);
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true },
     );
   }, [isLoaded, origin]);
 
@@ -169,7 +169,7 @@ export default function MultiRoutesMap({
   // =====================
   function calculateAllRoutes(
     routeKey: RouteType,
-    originPos: { lat: number; lng: number }
+    originPos: { lat: number; lng: number },
   ) {
     if (!mapRef.current) return;
     const directionsService = new google.maps.DirectionsService();
@@ -199,7 +199,7 @@ export default function MultiRoutesMap({
         } else {
           console.error("Blue route error:", status);
         }
-      }
+      },
     );
 
     // 2) A→B
@@ -215,7 +215,7 @@ export default function MultiRoutesMap({
         } else {
           console.error("Green route error:", status);
         }
-      }
+      },
     );
 
     // 3) B→C
@@ -231,7 +231,7 @@ export default function MultiRoutesMap({
         } else {
           console.error("Yellow route error:", status);
         }
-      }
+      },
     );
 
     // 4) C→origin
@@ -247,7 +247,7 @@ export default function MultiRoutesMap({
         } else {
           console.error("Red route error:", status);
         }
-      }
+      },
     );
 
     // A,B,C,D ピン
@@ -355,7 +355,7 @@ export default function MultiRoutesMap({
     originPos: { lat: number; lng: number },
     point1: Point,
     point2: Point,
-    point3: Point
+    point3: Point,
   ) {
     if (!mapRef.current) return;
     const bounds = new google.maps.LatLngBounds();

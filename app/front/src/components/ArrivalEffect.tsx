@@ -152,6 +152,6 @@ export function ArrivalEffect({ name, onComplete }: ArrivalEffectProps) {
         </div>
       </div>
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }

@@ -95,6 +95,6 @@ export function StartEffect({ onComplete }: StartEffectProps) {
         </div>
       </div>
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }

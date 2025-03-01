@@ -6,9 +6,12 @@ import { useState } from "react";
 import { TextField, Typography, Box, InputAdornment } from "@mui/material";
 import { MessageSquare } from "lucide-react";
 
-export default function PromptInput() {
-  const [prompt, setPrompt] = useState("");
+type PromptInputProps = {
+  prompt: string;
+  setPrompt: (prompt: string) => void;
+};
 
+export default function PromptInput({ prompt, setPrompt }: PromptInputProps) {
   const handlePromptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newPrompt = e.target.value;
     setPrompt(newPrompt);
