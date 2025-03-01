@@ -9,6 +9,8 @@ import { useRouter, usePathname } from "next/navigation";
 import FirstLogin from "@/components/FirstLogin";
 
 type StartProps = {
+  prompt: string;
+  setPrompt: (prompt: string) => void;
   progress: number;
   setProgress: (started: number) => void;
   isNewUser: boolean;
@@ -17,6 +19,8 @@ type StartProps = {
 };
 
 export default function Start({
+  prompt,
+  setPrompt,
   progress,
   setProgress,
   isNewUser,
@@ -69,7 +73,7 @@ export default function Start({
           </div>
 
           {/*　プロンプト入力欄　*/}
-          <Prompt />
+          <Prompt prompt={prompt} setPrompt={setPrompt} />
 
           <div>
             {/* 新規ユーザー用の表示 */}

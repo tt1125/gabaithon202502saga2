@@ -20,6 +20,7 @@ type SuggestedRoute = {
 export default function Page() {
   const [progress, storedProgress] = useState(0);
   const [suggestedRoutes, setSuggestedRoutes] = useState<SuggestedRoutes>();
+  const [prompt, setPrompt] = useState<string>("");
   const { active, setActive, currentLat, currentLng } = useGoogleMapContext();
 
   const [isNewUser, setIsNewUser] = useState<boolean>(true);
@@ -34,6 +35,7 @@ export default function Page() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          prompt: prompt,
           current_location_lat: currentLat,
           current_location_lng: currentLng,
         }),
@@ -103,6 +105,8 @@ export default function Page() {
         return (
           !active && (
             <Start
+              prompt={prompt}
+              setPrompt={setPrompt}
               handleClosePopup={handleClosePopup}
               isNewUser={isNewUser}
               progress={progress}

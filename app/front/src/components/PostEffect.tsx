@@ -194,6 +194,6 @@ export function PostEffect({ onComplete }: PostCompleteEffectProps) {
         </div>
       </div>
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }

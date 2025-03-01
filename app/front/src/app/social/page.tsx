@@ -155,7 +155,7 @@ export default function Page() {
         root: null,
         rootMargin: "0px",
         threshold: 1.0,
-      }
+      },
     );
 
     if (bottomRef.current) {
